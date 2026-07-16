@@ -1,0 +1,77 @@
+## .NET build
+**/bin/
+**/obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+*.log
+
+## Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.user
+*.userosscache
+*.suo
+*.rsuser
+*.sln.docstates
+*.DotSettings.user
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+## Test / coverage
+TestResults/
+[Tt]est[Rr]esult*/
+coverage/
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+
+## Secrets & local config
+.env
+.env.*
+!.env.example
+secrets.json
+**/secrets.json
+appsettings.Local.json
+appsettings.*.Local.json
+**/appsettings.Local.json
+**/appsettings.*.Local.json
+
+## Certificates & keys
+*.pfx
+*.key
+*.pem
+*.p12
+*.crt
+
+## SQL Server local files
+*.mdf
+*.ldf
+*.bak
+*.trn
+
+## NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+
+## OS / misc
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+*~
+
+## Uploads / runtime
+**/wwwroot/uploads/
+**/App_Data/
+*.db
+*.sqlite
+*.sqlite3
+
+## Publish output
+publish/
+artifacts/
+out/

@@ -1,0 +1,41 @@
+@model Staj360.Web.Models.AiReportSummaryViewModel
+<div class="alert alert-info">
+    <i class="bi bi-robot"></i>
+    Bu içerik yapay zekâ tarafından günlük çalışma raporları kullanılarak hazırlanmıştır. Nihai değerlendirme danışman ve kurum yetkilisine aittir.
+</div>
+
+@if (Model.Status == AiSummaryStatus.Completed)
+{
+    <div class="card mb-3"><div class="card-body">
+        <h6 class="text-muted">Yönetici Özeti</h6>
+        <p>@Model.ExecutiveSummary</p>
+    </div></div>
+
+    <div class="row g-3">
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h6 class="text-muted"><i class="bi bi-check2-square"></i> Tamamlanan Çalışmalar</h6>
+            <ul class="mb-0">@foreach (var w in Model.CompletedWork) { <li>@w</li> }</ul>
+        </div></div></div>
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h6 class="text-muted"><i class="bi bi-cpu"></i> Teknolojiler</h6>
+            <div>@foreach (var t in Model.Technologies) { <span class="badge bg-secondary me-1 mb-1">@t</span> }</div>
+        </div></div></div>
+        <div class="col-md-12"><div class="card"><div class="card-body">
+            <h6 class="text-muted"><i class="bi bi-tools"></i> Sorunlar ve Çözümler</h6>
+            <ul class="mb-0">@foreach (var p in Model.ProblemsAndSolutions) { <li><strong>@p.Problem</strong> → @p.Solution</li> }</ul>
+        </div></div></div>
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h6 class="text-muted"><i class="bi bi-exclamation-triangle"></i> Riskler / Engeller</h6>
+            <ul class="mb-0">@foreach (var r in Model.RisksOrBlockers) { <li>@r</li> }</ul>
+        </div></div></div>
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h6 class="text-muted"><i class="bi bi-arrow-right-circle"></i> Önerilen Sonraki Adımlar</h6>
+            <ul class="mb-0">@foreach (var s in Model.SuggestedNextSteps) { <li>@s</li> }</ul>
+        </div></div></div>
+    </div>
+    <p class="text-muted small mt-3">Model: @Model.ModelName • Oluşturulma (UTC): @Model.GeneratedAtUtc?.ToString("dd.MM.yyyy HH:mm")</p>
+}
+else if (Model.Status == AiSummaryStatus.Failed)
+{
+    <div class="alert alert-danger">Özet oluşturulamadı: @Model.FailureReason</div>
+}

@@ -1,0 +1,31 @@
+@model Staj360.Web.Areas.Intern.Models.LeaveRequestViewModel
+@{
+    ViewData["Title"] = "Yeni İzin Talebi";
+}
+<h1 class="h4 mb-3">Yeni İzin Talebi</h1>
+<div class="card"><div class="card-body">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="mb-3">
+            <label asp-for="LeaveType" class="form-label"></label>
+            <select asp-for="LeaveType" class="form-select">
+                <option value="0">Mazeret</option>
+                <option value="1">Sağlık</option>
+                <option value="2">İdari</option>
+                <option value="3">Diğer</option>
+            </select>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6"><label asp-for="StartDate" class="form-label"></label><input asp-for="StartDate" type="date" class="form-control" /><span asp-validation-for="StartDate" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="EndDate" class="form-label"></label><input asp-for="EndDate" type="date" class="form-control" /><span asp-validation-for="EndDate" class="text-danger"></span></div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Reason" class="form-label"></label>
+            <textarea asp-for="Reason" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Reason" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Gönder</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">İptal</a>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

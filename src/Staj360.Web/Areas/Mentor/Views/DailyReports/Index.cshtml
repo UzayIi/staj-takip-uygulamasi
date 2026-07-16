@@ -1,0 +1,35 @@
+@model IReadOnlyList<Staj360.Domain.Entities.DailyReport>
+@{
+    ViewData["Title"] = "Günlük Raporlar";
+    var status = ViewData["Status"] as DailyReportStatus?;
+}
+<h1 class="h4 mb-3">Günlük Raporlar</h1>
+<div class="btn-group mb-3">
+    <a asp-action="Index" asp-route-status="@((int)DailyReportStatus.Submitted)" class="btn btn-sm @(status == DailyReportStatus.Submitted || status == null ? "btn-primary" : "btn-outline-primary")">Bekleyen</a>
+    <a asp-action="Index" asp-route-status="@((int)DailyReportStatus.Approved)" class="btn btn-sm @(status == DailyReportStatus.Approved ? "btn-primary" : "btn-outline-primary")">Onaylanan</a>
+    <a asp-action="Index" asp-route-status="@((int)DailyReportStatus.RevisionRequested)" class="btn btn-sm @(status == DailyReportStatus.RevisionRequested ? "btn-primary" : "btn-outline-primary")">Düzeltme İstenen</a>
+</div>
+<div class="card"><div class="card-body p-0">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-journal-text"></i><p>Bu durumda rapor bulunmuyor.</p></div>
+}
+else
+{
+    <table class="table table-hover mb-0 align-middle">
+        <thead><tr><th>Stajyer</th><th>Tarih</th><th>Kalem</th><th>Durum</th><th class="text-end">İşlem</th></tr></thead>
+        <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.InternshipPeriod?.InternProfile?.StudentNumber</td>
+                <td>@r.ReportDate.ToString("dd.MM.yyyy")</td>
+                <td>@r.WorkItems.Count</td>
+                <td><span class="badge @DisplayText.BadgeClass(r.Status)">@DisplayText.Of(r.Status)</span></td>
+                <td class="text-end"><a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-primary">İncele</a></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+</div></div>

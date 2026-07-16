@@ -1,0 +1,67 @@
+@model Staj360.Domain.Entities.DailyReport
+@{
+    ViewData["Title"] = "Rapor İnceleme";
+    bool reviewable = Model.Status == DailyReportStatus.Submitted;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">@Model.InternshipPeriod?.InternProfile?.StudentNumber - @Model.ReportDate.ToString("dd.MM.yyyy")</h1>
+    <span class="badge @DisplayText.BadgeClass(Model.Status)">@DisplayText.Of(Model.Status)</span>
+</div>
+
+<div class="card mb-3"><div class="card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Genel Notlar</dt><dd class="col-sm-9">@(Model.GeneralNotes ?? "-")</dd>
+        <dt class="col-sm-3">Karşılaşılan Sorunlar</dt><dd class="col-sm-9">@(Model.ProblemsEncountered ?? "-")</dd>
+        <dt class="col-sm-3">Uygulanan Çözümler</dt><dd class="col-sm-9">@(Model.SolutionsApplied ?? "-")</dd>
+        <dt class="col-sm-3">Yarınki Plan</dt><dd class="col-sm-9">@(Model.TomorrowPlan ?? "-")</dd>
+    </dl>
+</div></div>
+
+<div class="card mb-3">
+    <div class="card-header bg-white fw-semibold">Çalışma Kalemleri (@Model.WorkItems.Count)</div>
+    <div class="card-body p-0">
+        <table class="table mb-0 align-middle">
+            <thead><tr><th>Başlık</th><th>Süre</th><th>Teknolojiler</th><th>Sonuç</th></tr></thead>
+            <tbody>
+            @foreach (var w in Model.WorkItems)
+            {
+                <tr><td>@w.Title<div class="text-muted small">@w.Description</div></td><td>@(w.DurationMinutes/60)sa @(w.DurationMinutes%60)dk</td><td class="text-muted">@w.TechnologiesUsed</td><td class="text-muted">@w.Result</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (reviewable)
+{
+    <div class="card">
+        <div class="card-header bg-white fw-semibold">Değerlendirme</div>
+        <div class="card-body">
+            <form asp-action="Review" method="post">
+                <input type="hidden" name="ReportId" value="@Model.Id" />
+                <div class="mb-3">
+                    <label class="form-label">Karar</label>
+                    <select name="Decision" class="form-select" style="max-width:280px">
+                        <option value="0">Onayla</option>
+                        <option value="1">Düzeltme İste</option>
+                        <option value="2">Reddet</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Danışman Yorumu (düzeltme/red için zorunlu)</label>
+                    <textarea name="MentorComment" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Kaydet</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Listeye Dön</a>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(Model.MentorComment))
+    {
+        <div class="alert alert-secondary"><strong>Danışman yorumu:</strong> @Model.MentorComment</div>
+    }
+    <a asp-action="Index" class="btn btn-outline-secondary">Listeye Dön</a>
+}

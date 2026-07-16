@@ -1,0 +1,31 @@
+@model IReadOnlyList<Staj360.Domain.Entities.Evaluation>
+@{
+    ViewData["Title"] = "Değerlendirmeler";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Değerlendirmeler</h1>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Yeni Değerlendirme</a>
+</div>
+<div class="card"><div class="card-body p-0">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-star"></i><p>Henüz değerlendirme yapılmadı.</p></div>
+}
+else
+{
+    <table class="table table-hover mb-0 align-middle">
+        <thead><tr><th>Stajyer</th><th>Tarih</th><th>Ortalama</th><th>Yorum</th></tr></thead>
+        <tbody>
+        @foreach (var e in Model)
+        {
+            <tr>
+                <td>@e.InternshipPeriod?.InternProfile?.StudentNumber</td>
+                <td>@e.EvaluationDate.ToString("dd.MM.yyyy")</td>
+                <td><span class="badge bg-primary">@e.AverageScore.ToString("0.0")</span></td>
+                <td class="text-muted">@e.GeneralComment</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+</div></div>

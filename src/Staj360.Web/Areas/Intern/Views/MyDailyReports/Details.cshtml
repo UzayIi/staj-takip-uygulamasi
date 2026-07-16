@@ -1,0 +1,93 @@
+@model Staj360.Domain.Entities.DailyReport
+@{
+    ViewData["Title"] = "Rapor Detayı";
+    bool editable = Model.Status is DailyReportStatus.Draft or DailyReportStatus.RevisionRequested;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Rapor - @Model.ReportDate.ToString("dd.MM.yyyy")</h1>
+    <span class="badge @DisplayText.BadgeClass(Model.Status)">@DisplayText.Of(Model.Status)</span>
+</div>
+
+@if (Model.Status == DailyReportStatus.RevisionRequested && !string.IsNullOrEmpty(Model.MentorComment))
+{
+    <div class="alert alert-warning"><strong>Danışman düzeltme notu:</strong> @Model.MentorComment</div>
+}
+@if (Model.Status == DailyReportStatus.Approved)
+{
+    <div class="alert alert-success"><i class="bi bi-lock"></i> Bu rapor onaylandı ve kilitlendi.</div>
+}
+
+<div class="card mb-3"><div class="card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Genel Notlar</dt><dd class="col-sm-9">@(Model.GeneralNotes ?? "-")</dd>
+        <dt class="col-sm-3">Karşılaşılan Sorunlar</dt><dd class="col-sm-9">@(Model.ProblemsEncountered ?? "-")</dd>
+        <dt class="col-sm-3">Uygulanan Çözümler</dt><dd class="col-sm-9">@(Model.SolutionsApplied ?? "-")</dd>
+        <dt class="col-sm-3">Yarınki Plan</dt><dd class="col-sm-9">@(Model.TomorrowPlan ?? "-")</dd>
+    </dl>
+</div></div>
+
+<div class="card mb-3">
+    <div class="card-header bg-white fw-semibold">Çalışma Kalemleri (@Model.WorkItems.Count)</div>
+    <div class="card-body p-0">
+        @if (Model.WorkItems.Count == 0)
+        {
+            <div class="empty-state"><i class="bi bi-list-task"></i><p>Henüz çalışma kalemi eklenmedi.</p></div>
+        }
+        else
+        {
+            <table class="table mb-0 align-middle">
+                <thead><tr><th>Başlık</th><th>Süre</th><th>Teknolojiler</th>@if (editable){<th></th>}</tr></thead>
+                <tbody>
+                @foreach (var w in Model.WorkItems)
+                {
+                    <tr>
+                        <td>@w.Title<div class="text-muted small">@w.Description</div></td>
+                        <td>@(w.DurationMinutes / 60)sa @(w.DurationMinutes % 60)dk</td>
+                        <td class="text-muted">@w.TechnologiesUsed</td>
+                        @if (editable)
+                        {
+                            <td class="text-end">
+                                <form asp-action="RemoveItem" method="post" class="d-inline" data-confirm="Silinsin mi?">
+                                    <input type="hidden" name="reportId" value="@Model.Id" />
+                                    <input type="hidden" name="itemId" value="@w.Id" />
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (editable)
+{
+    <div class="card mb-3">
+        <div class="card-header bg-white fw-semibold">Çalışma Kalemi Ekle</div>
+        <div class="card-body">
+            <form asp-action="AddItem" method="post">
+                <input type="hidden" name="ReportId" value="@Model.Id" />
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Başlık</label><input name="Title" class="form-control" required /></div>
+                    <div class="col-md-3"><label class="form-label">Süre (dk)</label><input name="DurationMinutes" type="number" min="1" max="1440" class="form-control" required /></div>
+                    <div class="col-md-3"><label class="form-label">Teknolojiler</label><input name="TechnologiesUsed" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">Açıklama</label><textarea name="Description" class="form-control" rows="2"></textarea></div>
+                    <div class="col-md-3"><label class="form-label">Sonuç</label><input name="Result" class="form-control" /></div>
+                    <div class="col-md-3"><label class="form-label">Depo URL</label><input name="RepositoryUrl" class="form-control" /></div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-plus-lg"></i> Ekle</button>
+            </form>
+        </div>
+    </div>
+
+    <form asp-action="Submit" asp-route-id="@Model.Id" method="post" data-confirm="Rapor danışmana gönderilecek. Onaya gönderildikten sonra düzenleyemezsiniz. Devam edilsin mi?">
+        <button type="submit" class="btn btn-success"><i class="bi bi-send"></i> Danışmana Gönder</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Listeye Dön</a>
+    </form>
+}
+else
+{
+    <a asp-action="Index" class="btn btn-outline-secondary">Listeye Dön</a>
+}

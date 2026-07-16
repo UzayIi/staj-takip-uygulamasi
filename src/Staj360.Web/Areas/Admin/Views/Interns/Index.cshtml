@@ -1,0 +1,90 @@
+@model Staj360.Application.Common.PagedResult<Staj360.Application.Services.Internships.InternListItemDto>
+@{
+    ViewData["Title"] = "Stajyerler";
+    var search = ViewData["Search"] as string;
+}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h4 mb-0">Stajyerler</h1>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus"></i> Yeni Stajyer</a>
+</div>
+
+<form method="get" class="mb-3">
+    <div class="input-group" style="max-width:480px">
+        <input type="text" name="search" value="@search" class="form-control"
+               placeholder="Ad soyad, e-posta, öğrenci no, üniversite, departman..." />
+        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+    </div>
+</form>
+
+<div class="card"><div class="card-body p-0">
+@if (Model.Items.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-people"></i><p>Kayıtlı stajyer bulunmuyor.</p></div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Ad Soyad</th>
+                    <th>E-posta</th>
+                    <th>Öğrenci No</th>
+                    <th>Üniversite</th>
+                    <th>Okuduğu Bölüm</th>
+                    <th>Kurum Departmanı</th>
+                    <th>Danışman</th>
+                    <th>Staj Başlangıç</th>
+                    <th>Staj Bitiş</th>
+                    <th>Staj Durumu</th>
+                    <th class="text-end">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var i in Model.Items)
+            {
+                <tr>
+                    <td class="fw-semibold">@i.FullName</td>
+                    <td class="text-muted small">@i.Email</td>
+                    <td>@i.StudentNumber</td>
+                    <td>@(i.University ?? "-")</td>
+                    <td>@(i.SchoolDepartment ?? "-")</td>
+                    <td>@i.DepartmentName</td>
+                    <td>@(i.MentorFullName ?? "-")</td>
+                    <td>@(i.PeriodStartDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+                    <td>@(i.PeriodEndDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+                    <td>
+                        @if (i.PeriodStatus.HasValue)
+                        {
+                            <span class="badge @DisplayText.BadgeClass(i.PeriodStatus.Value)">@DisplayText.Of(i.PeriodStatus.Value)</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Dönem yok</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a asp-area="Admin" asp-controller="InternshipPeriods" asp-action="Index"
+                           class="btn btn-sm btn-outline-secondary" title="Staj dönemleri">
+                            <i class="bi bi-calendar-range"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+</div></div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-3"><ul class="pagination flex-wrap">
+        @for (int p = 1; p <= Model.TotalPages; p++)
+        {
+            <li class="page-item @(p == Model.Page ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-search="@search">@p</a>
+            </li>
+        }
+    </ul></nav>
+}
