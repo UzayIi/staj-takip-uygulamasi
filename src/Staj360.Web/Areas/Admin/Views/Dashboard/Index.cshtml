@@ -1,0 +1,58 @@
+@model Staj360.Web.Areas.Admin.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Yönetici Gösterge Paneli";
+}
+<h1 class="h4 mb-4">Yönetici Gösterge Paneli</h1>
+
+<div class="row g-3 mb-4">
+    @{
+        (string label, int value, string icon, string color)[] cards = new[]
+        {
+            ("Aktif Stajyer", Model.ActiveInterns, "bi-people", "primary"),
+            ("Bugün Giriş Yapan", Model.CheckedInToday, "bi-box-arrow-in-right", "success"),
+            ("Geç Kalan", Model.LateToday, "bi-clock", "warning"),
+            ("Eksik Çıkış", Model.IncompleteToday, "bi-hourglass-split", "warning"),
+            ("İzinli", Model.OnLeaveToday, "bi-calendar-check", "info"),
+            ("Onay Bekleyen Rapor", Model.PendingReports, "bi-journal-text", "danger"),
+            ("Onay Bekleyen İzin", Model.PendingLeaves, "bi-calendar-x", "danger"),
+            ("Devam Eden Proje", Model.OngoingProjects, "bi-kanban", "secondary"),
+            ("Yakında Bitecek Staj", Model.EndingSoon, "bi-calendar-event", "dark"),
+        };
+    }
+    @foreach (var c in cards)
+    {
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <i class="bi @c.icon fs-2 text-@c.color"></i>
+                    <div>
+                        <div class="stat-value">@c.value</div>
+                        <div class="stat-label">@c.label</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card">
+    <div class="card-header bg-white fw-semibold"><i class="bi bi-shield-check"></i> Son İşlemler</div>
+    <div class="card-body p-0">
+        @if (Model.RecentAudits.Count == 0)
+        {
+            <div class="empty-state"><i class="bi bi-inbox"></i><p>Henüz işlem kaydı yok.</p></div>
+        }
+        else
+        {
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Varlık</th><th>İşlem</th><th>Tarih (UTC)</th></tr></thead>
+                <tbody>
+                @foreach (var a in Model.RecentAudits)
+                {
+                    <tr><td>@a.EntityName</td><td>@a.Action</td><td>@a.CreatedAtUtc.ToString("dd.MM.yyyy HH:mm")</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

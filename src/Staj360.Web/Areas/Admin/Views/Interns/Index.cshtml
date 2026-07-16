@@ -1,0 +1,236 @@
+@model Staj360.Application.Common.PagedResult<Staj360.Application.Services.Internships.InternListItemDto>
+@{
+    ViewData["Title"] = "Stajyerler";
+    var search = ViewData["Search"] as string;
+    var selectedYear = ViewData["Year"] as int?;
+    var years = ViewData["Years"] as List<int> ?? new List<int>();
+}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h4 mb-0">Stajyerler</h1>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus"></i> Yeni Stajyer</a>
+</div>
+
+<form method="get" class="mb-3">
+    <div class="d-flex gap-2 flex-wrap" style="max-width:640px">
+        <div class="input-group flex-grow-1" style="min-width:260px">
+            <input type="text" name="search" value="@search" class="form-control"
+                   placeholder="Ad soyad, üniversite, departman..." />
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+        </div>
+        <select name="year" class="form-select" style="max-width:140px" onchange="this.form.submit()">
+            <option value="">Tüm Yıllar</option>
+            @foreach (var y in years)
+            {
+                <option value="@y" selected="@(selectedYear == y ? "selected" : null)">@y</option>
+            }
+        </select>
+    </div>
+</form>
+
+<div class="card"><div class="card-body p-0">
+@if (Model.Items.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-people"></i><p>Kayıtlı stajyer bulunmuyor.</p></div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Ad Soyad</th>
+                    <th>Üniversite</th>
+                    <th>Okuduğu Bölüm</th>
+                    <th>Kurum Departmanı</th>
+                    <th>Danışman</th>
+                    <th>Staj Başlangıç</th>
+                    <th>Staj Bitiş</th>
+                    <th>Staj Durumu</th>
+                    <th class="text-end">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var i in Model.Items)
+            {
+                <tr class="intern-row" style="cursor:pointer"
+                    data-fullname="@i.FullName"
+                    data-email="@i.Email"
+                    data-studentnumber="@i.StudentNumber"
+                    data-nationalid="@(i.NationalIdMasked ?? "-")"
+                    data-university="@(i.University ?? "-")"
+                    data-faculty="@(i.Faculty ?? "-")"
+                    data-schooldepartment="@(i.SchoolDepartment ?? "-")"
+                    data-classlevel="@(i.ClassLevel ?? "-")"
+                    data-phone="@(i.PhoneNumber ?? "-")"
+                    data-emergencyname="@(i.EmergencyContactName ?? "-")"
+                    data-emergencyphone="@(i.EmergencyContactPhone ?? "-")"
+                    data-department="@i.DepartmentName"
+                    data-mentor="@(i.MentorFullName ?? "-")"
+                    data-periodstart="@(i.PeriodStartDate?.ToString("dd.MM.yyyy") ?? "-")"
+                    data-periodend="@(i.PeriodEndDate?.ToString("dd.MM.yyyy") ?? "-")"
+                    data-periodstatus="@(i.PeriodStatus.HasValue ? DisplayText.Of(i.PeriodStatus.Value) : "Dönem yok")"
+                    data-periodstatusclass="@(i.PeriodStatus.HasValue ? DisplayText.BadgeClass(i.PeriodStatus.Value) : "bg-secondary")">
+                    <td class="fw-semibold">@i.FullName</td>
+                    <td>@(i.University ?? "-")</td>
+                    <td>@(i.SchoolDepartment ?? "-")</td>
+                    <td>@i.DepartmentName</td>
+                    <td>@(i.MentorFullName ?? "-")</td>
+                    <td>@(i.PeriodStartDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+                    <td>@(i.PeriodEndDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+                    <td>
+                        @if (i.PeriodStatus.HasValue)
+                        {
+                            <span class="badge @DisplayText.BadgeClass(i.PeriodStatus.Value)">@DisplayText.Of(i.PeriodStatus.Value)</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Dönem yok</span>
+                        }
+                    </td>
+                    <td class="text-end" onclick="event.stopPropagation()">
+                        <div class="d-flex justify-content-end gap-1">
+                            <a asp-area="Admin" asp-controller="InternshipPeriods" asp-action="Index"
+                               class="btn btn-sm btn-outline-secondary" title="Staj dönemleri">
+                                <i class="bi bi-calendar-range"></i>
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@i.InternProfileId" method="post" style="display:inline;" data-confirm="Bu stajyeri silmek istediğinize emin misiniz? (Silinen stajyerler listelerde görünmez, ancak geçmiş verileri korunur.)">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Sil">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+</div></div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-3"><ul class="pagination flex-wrap">
+        @for (int p = 1; p <= Model.TotalPages; p++)
+        {
+            <li class="page-item @(p == Model.Page ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-search="@search" asp-route-year="@selectedYear">@p</a>
+            </li>
+        }
+    </ul></nav>
+}
+
+@* Stajyer Detay Modalı *@
+<div class="modal fade" id="internDetailModal" tabindex="-1" aria-labelledby="internDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="internDetailModalLabel"><i class="bi bi-person-lines-fill me-2"></i>Stajyer Bilgileri</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Ad Soyad</label>
+                            <div class="fw-semibold" id="detail-fullname"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">E-posta</label>
+                            <div id="detail-email"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Öğrenci Numarası</label>
+                            <div id="detail-studentnumber"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">T.C. Kimlik No</label>
+                            <div id="detail-nationalid"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Telefon</label>
+                            <div id="detail-phone"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Acil Durum Kişisi</label>
+                            <div id="detail-emergencyname"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Acil Durum Telefonu</label>
+                            <div id="detail-emergencyphone"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Üniversite</label>
+                            <div id="detail-university"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Fakülte</label>
+                            <div id="detail-faculty"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Bölüm</label>
+                            <div id="detail-schooldepartment"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Sınıf</label>
+                            <div id="detail-classlevel"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Kurum Departmanı</label>
+                            <div id="detail-department"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Danışman</label>
+                            <div id="detail-mentor"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-0">Staj Dönemi</label>
+                            <div>
+                                <span id="detail-periodstart"></span> — <span id="detail-periodend"></span>
+                                <span class="badge ms-2" id="detail-periodstatus"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = new bootstrap.Modal(document.getElementById('internDetailModal'));
+    document.querySelectorAll('.intern-row').forEach(function (row) {
+        row.addEventListener('click', function () {
+            document.getElementById('detail-fullname').textContent = this.dataset.fullname;
+            document.getElementById('detail-email').textContent = this.dataset.email;
+            document.getElementById('detail-studentnumber').textContent = this.dataset.studentnumber;
+            document.getElementById('detail-nationalid').textContent = this.dataset.nationalid;
+            document.getElementById('detail-university').textContent = this.dataset.university;
+            document.getElementById('detail-faculty').textContent = this.dataset.faculty;
+            document.getElementById('detail-schooldepartment').textContent = this.dataset.schooldepartment;
+            document.getElementById('detail-classlevel').textContent = this.dataset.classlevel;
+            document.getElementById('detail-phone').textContent = this.dataset.phone;
+            document.getElementById('detail-emergencyname').textContent = this.dataset.emergencyname;
+            document.getElementById('detail-emergencyphone').textContent = this.dataset.emergencyphone;
+            document.getElementById('detail-department').textContent = this.dataset.department;
+            document.getElementById('detail-mentor').textContent = this.dataset.mentor;
+            document.getElementById('detail-periodstart').textContent = this.dataset.periodstart;
+            document.getElementById('detail-periodend').textContent = this.dataset.periodend;
+
+            var statusBadge = document.getElementById('detail-periodstatus');
+            statusBadge.textContent = this.dataset.periodstatus;
+            statusBadge.className = 'badge ms-2 ' + this.dataset.periodstatusclass;
+
+            modal.show();
+        });
+    });
+});
+</script>
+}

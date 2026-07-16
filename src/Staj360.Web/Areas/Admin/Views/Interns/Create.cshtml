@@ -1,0 +1,55 @@
+@model Staj360.Web.Areas.Admin.Models.CreateInternViewModel
+@{
+    ViewData["Title"] = "Yeni Stajyer";
+}
+<h1 class="h4 mb-3">Yeni Stajyer</h1>
+<div class="card"><div class="card-body">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="FullName" class="form-label"></label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+                <div class="form-text">En az 8 karakter, büyük/küçük harf, rakam ve sembol içermeli.</div>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="StudentNumber" class="form-label"></label>
+                <input asp-for="StudentNumber" class="form-control" />
+                <span asp-validation-for="StudentNumber" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="DepartmentId" class="form-label"></label>
+                <select asp-for="DepartmentId" asp-items="Model.Departments" class="form-select"><option value="">Seçiniz...</option></select>
+                <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="NationalId" class="form-label"></label>
+                <input asp-for="NationalId" class="form-control" />
+                <div class="form-text">Hassas veri olarak işlenir, maskeli gösterilir.</div>
+            </div>
+            <div class="col-md-4"><label asp-for="University" class="form-label"></label><input asp-for="University" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="Faculty" class="form-label"></label><input asp-for="Faculty" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="SchoolDepartment" class="form-label"></label><input asp-for="SchoolDepartment" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="ClassLevel" class="form-label"></label><input asp-for="ClassLevel" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="PhoneNumber" class="form-label"></label><input asp-for="PhoneNumber" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="EmergencyContactName" class="form-label"></label><input asp-for="EmergencyContactName" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="EmergencyContactPhone" class="form-label"></label><input asp-for="EmergencyContactPhone" class="form-control" /></div>
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Kaydet</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+        </div>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,32 @@
+@model Staj360.Domain.Entities.DailyReport
+@{
+    ViewData["Title"] = "Rapor Detayı";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">@Model.InternshipPeriod?.InternProfile?.StudentNumber - @Model.ReportDate.ToString("dd.MM.yyyy")</h1>
+    <span class="badge @DisplayText.BadgeClass(Model.Status)">@DisplayText.Of(Model.Status)</span>
+</div>
+<div class="card mb-3"><div class="card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Genel Notlar</dt><dd class="col-sm-9">@(Model.GeneralNotes ?? "-")</dd>
+        <dt class="col-sm-3">Karşılaşılan Sorunlar</dt><dd class="col-sm-9">@(Model.ProblemsEncountered ?? "-")</dd>
+        <dt class="col-sm-3">Uygulanan Çözümler</dt><dd class="col-sm-9">@(Model.SolutionsApplied ?? "-")</dd>
+        <dt class="col-sm-3">Yarınki Plan</dt><dd class="col-sm-9">@(Model.TomorrowPlan ?? "-")</dd>
+        <dt class="col-sm-3">Danışman Yorumu</dt><dd class="col-sm-9">@(Model.MentorComment ?? "-")</dd>
+    </dl>
+</div></div>
+<div class="card">
+    <div class="card-header bg-white fw-semibold">Çalışma Kalemleri (@Model.WorkItems.Count)</div>
+    <div class="card-body p-0">
+        <table class="table mb-0 align-middle">
+            <thead><tr><th>Başlık</th><th>Süre</th><th>Teknolojiler</th></tr></thead>
+            <tbody>
+            @foreach (var w in Model.WorkItems)
+            {
+                <tr><td>@w.Title<div class="text-muted small">@w.Description</div></td><td>@(w.DurationMinutes/60)sa @(w.DurationMinutes%60)dk</td><td class="text-muted">@w.TechnologiesUsed</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+<a asp-action="Index" class="btn btn-outline-secondary mt-3">Listeye Dön</a>

@@ -1,0 +1,82 @@
+@model Staj360.Web.Areas.Mentor.Models.ProjectDetailsViewModel
+@{
+    ViewData["Title"] = Model.Project.Name;
+    var p = Model.Project;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">@p.Name</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Listeye Dön</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card mb-3"><div class="card-header bg-white fw-semibold">İlerleme</div><div class="card-body">
+            <form asp-action="UpdateProgress" method="post">
+                <input type="hidden" name="id" value="@p.Id" />
+                <div class="mb-2"><label class="form-label">Durum</label>
+                    <select name="status" class="form-select">
+                        <option value="0" selected="@(p.Status == ProjectStatus.Planned)">Planlandı</option>
+                        <option value="1" selected="@(p.Status == ProjectStatus.InProgress)">Devam Ediyor</option>
+                        <option value="2" selected="@(p.Status == ProjectStatus.OnHold)">Beklemede</option>
+                        <option value="3" selected="@(p.Status == ProjectStatus.Completed)">Tamamlandı</option>
+                        <option value="4" selected="@(p.Status == ProjectStatus.Cancelled)">İptal</option>
+                    </select>
+                </div>
+                <div class="mb-2"><label class="form-label">İlerleme (%)</label><input name="progressPercentage" type="number" min="0" max="100" value="@p.ProgressPercentage" class="form-control" /></div>
+                <button class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Güncelle</button>
+            </form>
+        </div></div>
+
+        <div class="card"><div class="card-header bg-white fw-semibold">Stajyer Ata</div><div class="card-body">
+            <form asp-action="AssignIntern" method="post">
+                <input type="hidden" name="id" value="@p.Id" />
+                <div class="mb-2"><select name="internProfileId" asp-items="Model.Interns" class="form-select"><option value="">-- Stajyer --</option></select></div>
+                <div class="mb-2"><input name="roleDescription" class="form-control" placeholder="Rol açıklaması" /></div>
+                <button class="btn btn-sm btn-primary"><i class="bi bi-person-plus"></i> Ata</button>
+            </form>
+        </div></div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Görevler (@Model.Tasks.Count)</div>
+            <div class="card-body p-0">
+                @if (Model.Tasks.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-list-check"></i><p>Görev yok.</p></div>
+                }
+                else
+                {
+                    <table class="table mb-0 align-middle">
+                        <thead><tr><th>Başlık</th><th>Atanan</th><th>Öncelik</th><th>Durum</th></tr></thead>
+                        <tbody>
+                        @foreach (var t in Model.Tasks)
+                        {
+                            <tr><td>@t.Title</td><td>@t.AssignedInternProfile?.StudentNumber</td><td>@DisplayText.Of(t.Priority)</td><td><span class="badge @DisplayText.BadgeClass(t.Status)">@DisplayText.Of(t.Status)</span></td></tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+
+        <div class="card"><div class="card-header bg-white fw-semibold">Yeni Görev</div><div class="card-body">
+            <form asp-action="CreateTask" method="post">
+                <input type="hidden" name="ProjectId" value="@p.Id" />
+                <div class="row g-2">
+                    <div class="col-md-6"><input name="Title" class="form-control" placeholder="Başlık" required /></div>
+                    <div class="col-md-3">
+                        <select name="Priority" class="form-select">
+                            <option value="0">Düşük</option><option value="1" selected>Orta</option><option value="2">Yüksek</option><option value="3">Kritik</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><select name="AssignedInternProfileId" asp-items="Model.Interns" class="form-select"><option value="">Atanmadı</option></select></div>
+                    <div class="col-md-8"><input name="Description" class="form-control" placeholder="Açıklama" /></div>
+                    <div class="col-md-2"><input name="DueDate" type="date" class="form-control" /></div>
+                    <div class="col-md-2"><input name="EstimatedMinutes" type="number" min="1" class="form-control" placeholder="dk" /></div>
+                </div>
+                <button class="btn btn-primary mt-3"><i class="bi bi-plus-lg"></i> Ekle</button>
+            </form>
+        </div></div>
+    </div>
+</div>
