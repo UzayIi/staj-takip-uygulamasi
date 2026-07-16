@@ -1,13 +1,17 @@
+# staj-takip-uygulamasi
+
 # Staj360 – Kurumsal Stajyer Yönetim ve Takip Sistemi
 
 ASP.NET Core MVC ile geliştirilmiş, katmanlı monolit bir stajyer yönetim uygulaması.
 Devam (giriş-çıkış), günlük rapor, proje/görev, izin, değerlendirme, denetim kaydı ve
 yapay zekâ destekli rapor özeti akışlarını kapsar.
 
+GitHub deposu: [UzayIi/staj-takip-uygulamasi](https://github.com/UzayIi/staj-takip-uygulamasi)
+
 ## 1. Projeyi klonlama
 
 ```powershell
-git clone https://github.com/Uzayli/staj-takip-uygulamasi.git
+git clone https://github.com/UzayIi/staj-takip-uygulamasi.git
 cd staj-takip-uygulamasi
 ```
 
