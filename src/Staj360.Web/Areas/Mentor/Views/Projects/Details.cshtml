@@ -1,0 +1,76 @@
+@model Staj360.Web.Models.ProjectDetailsPageViewModel
+@{
+    ViewData["Title"] = Model.Details.Name;
+    var d = Model.Details;
+}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h4 mb-0">@d.Name</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Listeye Dön</a>
+</div>
+
+@if (Model.ShowManagePanel)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="card mb-3"><div class="card-header bg-white fw-semibold">İlerleme Yönetimi</div><div class="card-body">
+                <form asp-action="UpdateProgress" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@d.Id" />
+                    <div class="mb-2"><label class="form-label">Durum</label>
+                        <select name="status" class="form-select">
+                            @foreach (ProjectStatus s in Enum.GetValues(typeof(ProjectStatus)))
+                            {
+                                if (d.Status == s)
+                                {
+                                    <option value="@((int)s)" selected>@DisplayText.Of(s)</option>
+                                }
+                                else
+                                {
+                                    <option value="@((int)s)">@DisplayText.Of(s)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-2"><label class="form-label">İlerleme (%)</label><input name="progressPercentage" type="number" min="0" max="100" value="@d.ProgressPercentage" class="form-control" /></div>
+                    <button class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Güncelle</button>
+                </form>
+            </div></div>
+
+            <div class="card mb-3"><div class="card-header bg-white fw-semibold">Stajyer Ata</div><div class="card-body">
+                <form asp-action="AssignIntern" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@d.Id" />
+                    <div class="mb-2"><select name="internProfileId" asp-items="Model.AssignableInterns" class="form-select"><option value="">-- Stajyer --</option></select></div>
+                    <div class="mb-2"><input name="roleDescription" class="form-control" placeholder="Rol açıklaması" /></div>
+                    <button class="btn btn-sm btn-primary"><i class="bi bi-person-plus"></i> Ata</button>
+                </form>
+            </div></div>
+
+            <div class="card"><div class="card-header bg-white fw-semibold">Yeni Görev</div><div class="card-body">
+                <form asp-action="CreateTask" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ProjectId" value="@d.Id" />
+                    <div class="mb-2"><input name="Title" class="form-control" placeholder="Başlık" required /></div>
+                    <div class="mb-2">
+                        <select name="Priority" class="form-select">
+                            <option value="0">Düşük</option><option value="1" selected>Orta</option><option value="2">Yüksek</option><option value="3">Kritik</option>
+                        </select>
+                    </div>
+                    <div class="mb-2"><select name="AssignedInternProfileId" asp-items="Model.AssignableInterns" class="form-select"><option value="">Atanmadı</option></select></div>
+                    <div class="mb-2"><input name="Description" class="form-control" placeholder="Açıklama" /></div>
+                    <div class="mb-2"><input name="DueDate" type="date" class="form-control" /></div>
+                    <div class="mb-2"><input name="EstimatedMinutes" type="number" min="1" class="form-control" placeholder="dk" /></div>
+                    <button class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Ekle</button>
+                </form>
+            </div></div>
+        </div>
+        <div class="col-md-8">
+            <partial name="_ProjectDetailsContent" model="Model" />
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">Bu projeyi görüntüleyebilirsiniz; yönetim yalnızca sorumlu mentora aittir.</div>
+    <partial name="_ProjectDetailsContent" model="Model" />
+}

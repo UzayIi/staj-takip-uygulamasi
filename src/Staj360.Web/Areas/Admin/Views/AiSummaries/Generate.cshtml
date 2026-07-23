@@ -1,0 +1,32 @@
+@model Staj360.Web.Models.GenerateAiSummaryViewModel
+@{
+    ViewData["Title"] = "Yapay Zekâ Özeti Oluştur";
+}
+<h1 class="h4 mb-3">Yapay Zekâ Özeti Oluştur</h1>
+<div class="card"><div class="card-body">
+    <form asp-action="Generate" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="mb-3">
+            <label asp-for="InternshipPeriodId" class="form-label"></label>
+            <select asp-for="InternshipPeriodId" asp-items="Model.Periods" class="form-select"><option value="">-- Seçiniz --</option></select>
+            <span asp-validation-for="InternshipPeriodId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="SummaryType" class="form-label"></label>
+            <select asp-for="SummaryType" class="form-select">
+                <option value="0">Haftalık</option>
+                <option value="1">Aylık</option>
+                <option value="2" selected>Özel Aralık</option>
+                <option value="3">Staj Sonu Genel</option>
+            </select>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6"><label asp-for="PeriodStart" class="form-label"></label><input asp-for="PeriodStart" type="date" class="form-control" /><span asp-validation-for="PeriodStart" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="PeriodEnd" class="form-label"></label><input asp-for="PeriodEnd" type="date" class="form-control" /><span asp-validation-for="PeriodEnd" class="text-danger"></span></div>
+        </div>
+        <p class="text-muted small">Özet yalnızca seçilen tarih aralığındaki <strong>onaylanmış</strong> günlük raporlardan oluşturulur.</p>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-robot"></i> Oluştur</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">İptal</a>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

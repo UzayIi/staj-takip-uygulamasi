@@ -1,0 +1,34 @@
+@model IReadOnlyList<Staj360.Domain.Entities.InternFeedback>
+@{
+    ViewData["Title"] = "Geri Bildirimlerim";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Geri Bildirimlerim</h1>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Yeni</a>
+</div>
+<div class="card"><div class="card-body p-0">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-chat-left-text"></i><p>Henüz geri bildiriminiz yok.</p></div>
+}
+else
+{
+    <table class="table mb-0 align-middle">
+        <thead><tr><th>Başlık</th><th>Durum</th><th>Tarih</th><th>Cevap</th></tr></thead>
+        <tbody>
+        @foreach (var f in Model)
+        {
+            <tr>
+                <td>
+                    <div class="fw-semibold">@f.Title</div>
+                    <div class="text-muted small">@f.Message</div>
+                </td>
+                <td><span class="badge bg-secondary">@f.Status</span></td>
+                <td>@f.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                <td class="text-muted small">@(f.ReplyMessage ?? "—")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+</div></div>

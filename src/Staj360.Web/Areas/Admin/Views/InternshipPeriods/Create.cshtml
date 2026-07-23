@@ -1,0 +1,45 @@
+@model Staj360.Web.Areas.Admin.Models.CreateInternshipPeriodViewModel
+@{
+    ViewData["Title"] = "Yeni Staj Dönemi";
+}
+<h1 class="h4 mb-3">Yeni Staj Dönemi</h1>
+<div class="card"><div class="card-body">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="InternProfileId" class="form-label"></label>
+                <select asp-for="InternProfileId" asp-items="Model.Interns" class="form-select"><option value="">Seçiniz...</option></select>
+                <span asp-validation-for="InternProfileId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="MentorUserId" class="form-label"></label>
+                <select asp-for="MentorUserId" asp-items="Model.Mentors" class="form-select"><option value="">Seçiniz...</option></select>
+                <span asp-validation-for="MentorUserId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="WorkScheduleId" class="form-label"></label>
+                <select asp-for="WorkScheduleId" asp-items="Model.Schedules" class="form-select"><option value="">Seçiniz...</option></select>
+                <span asp-validation-for="WorkScheduleId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="RequiredWorkDays" class="form-label"></label>
+                <input asp-for="RequiredWorkDays" class="form-control" />
+                <span asp-validation-for="RequiredWorkDays" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="StartDate" class="form-label"></label>
+                <input asp-for="StartDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="EndDate" class="form-label"></label>
+                <input asp-for="EndDate" type="date" class="form-control" />
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Kaydet</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+        </div>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

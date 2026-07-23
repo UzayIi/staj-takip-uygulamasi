@@ -1,0 +1,36 @@
+@model Staj360.Web.Areas.Manager.Models.CreateTransferViewModel
+@{
+    ViewData["Title"] = "Yeni Transfer";
+}
+<h1 class="h4 mb-3">Transfer Talebi / Uygulama</h1>
+<div class="card"><div class="card-body">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+        <div class="mb-3">
+            <label asp-for="InternProfileId" class="form-label"></label>
+            <select asp-for="InternProfileId" asp-items="Model.Interns" class="form-select"><option value="">Seçiniz...</option></select>
+            <span asp-validation-for="InternProfileId" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TargetOrganizationUnitId" class="form-label"></label>
+            <select asp-for="TargetOrganizationUnitId" asp-items="Model.Branches" class="form-select"><option value="">Seçiniz...</option></select>
+            <span asp-validation-for="TargetOrganizationUnitId" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TargetAdvisorUserId" class="form-label"></label>
+            <select asp-for="TargetAdvisorUserId" asp-items="Model.Advisors" class="form-select"><option value="">Seçiniz...</option></select>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="ExecuteImmediatelyIfSameManager" class="form-check-input" />
+            <label asp-for="ExecuteImmediatelyIfSameManager" class="form-check-label"></label>
+        </div>
+        <div class="mb-3">
+            <label asp-for="RequestNote" class="form-label"></label>
+            <textarea asp-for="RequestNote" class="form-control" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Kaydet</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

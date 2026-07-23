@@ -1,0 +1,46 @@
+@model IReadOnlyList<Staj360.Domain.Entities.InternFeedback>
+@{
+    ViewData["Title"] = "Geri Bildirimler";
+}
+<h1 class="h4 mb-3">Geri Bildirimler</h1>
+<div class="card"><div class="card-body p-0">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-chat-left-text"></i><p>Geri bildirim bulunmuyor.</p></div>
+}
+else
+{
+    <div class="list-group list-group-flush">
+    @foreach (var f in Model)
+    {
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between gap-2">
+                <div>
+                    <div class="fw-semibold">@f.Title</div>
+                    <div class="small text-muted">@(f.InternProfile?.StudentNumber ?? "—") · @f.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm") · @f.Status</div>
+                    <p class="mb-2 mt-1">@f.Message</p>
+                    @if (!string.IsNullOrWhiteSpace(f.ReplyMessage))
+                    {
+                        <div class="alert alert-light border py-2 small mb-2"><strong>Cevabınız:</strong> @f.ReplyMessage</div>
+                    }
+                </div>
+            </div>
+            @if (string.IsNullOrWhiteSpace(f.ReplyMessage))
+            {
+                <form asp-action="Reply" method="post" class="row g-2 align-items-end">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="feedbackId" value="@f.Id" />
+                    <div class="col-md-8">
+                        <label class="form-label small mb-0">Cevap</label>
+                        <textarea name="replyMessage" class="form-control form-control-sm" rows="2" required></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-sm btn-primary">Cevapla</button>
+                    </div>
+                </form>
+            }
+        </div>
+    }
+    </div>
+}
+</div></div>

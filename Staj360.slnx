@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Staj360.Application/Staj360.Application.csproj" />
+    <Project Path="src/Staj360.Domain/Staj360.Domain.csproj" />
+    <Project Path="src/Staj360.Infrastructure/Staj360.Infrastructure.csproj" />
+    <Project Path="src/Staj360.Web/Staj360.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Staj360.IntegrationTests/Staj360.IntegrationTests.csproj" />
+    <Project Path="tests/Staj360.UnitTests/Staj360.UnitTests.csproj" />
+  </Folder>
+</Solution>

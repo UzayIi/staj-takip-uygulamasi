@@ -1,0 +1,16 @@
+@model Staj360.Web.Areas.Manager.Models.ManagerDashboardViewModel
+@{
+    ViewData["Title"] = "Yönetici Paneli";
+}
+<h1 class="h4 mb-4">Yönetici Paneli</h1>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="card stat-card"><div class="card-body d-flex align-items-center gap-3"><i class="bi bi-diagram-3 fs-2 text-primary"></i><div><div class="stat-value">@Model.UnitCount</div><div class="stat-label">Birimlerim</div></div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card stat-card"><div class="card-body d-flex align-items-center gap-3"><i class="bi bi-people fs-2 text-success"></i><div><div class="stat-value">@Model.InternCount</div><div class="stat-label">Stajyerler</div></div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card stat-card"><div class="card-body d-flex align-items-center gap-3"><i class="bi bi-calendar-x fs-2 text-warning"></i><div><div class="stat-value">@Model.PendingLeaveCount</div><div class="stat-label">Bekleyen İzin</div></div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card stat-card"><div class="card-body d-flex align-items-center gap-3"><i class="bi bi-arrow-left-right fs-2 text-danger"></i><div><div class="stat-value">@Model.PendingTransferCount</div><div class="stat-label">Bekleyen Transfer</div></div></div></div></div>
+</div>
+<div class="d-flex gap-2 flex-wrap">
+    <a asp-controller="Interns" asp-action="Index" class="btn btn-outline-primary">Stajyerler</a>
+    <a asp-controller="LeaveRequests" asp-action="Index" class="btn btn-outline-warning">İzin Talepleri</a>
+    <a asp-controller="Transfers" asp-action="Index" class="btn btn-outline-danger">Transferler</a>
+</div>

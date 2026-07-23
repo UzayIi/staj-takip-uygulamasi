@@ -1,0 +1,43 @@
+@model IReadOnlyList<Staj360.Application.Services.Organization.OrganizationUnitDto>
+@{
+    ViewData["Title"] = "Teşkilat";
+    var directorates = Model.Where(u => u.UnitType == OrganizationUnitType.Directorate).ToList();
+    var branchesByParent = Model.Where(u => u.UnitType == OrganizationUnitType.Branch)
+        .GroupBy(u => u.ParentId)
+        .ToDictionary(g => g.Key ?? Guid.Empty, g => g.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name).ToList());
+}
+<h1 class="h4 mb-3">Teşkilat Yapısı</h1>
+<div class="card"><div class="card-body">
+@if (directorates.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-diagram-3"></i><p>Teşkilat birimi bulunmuyor.</p></div>
+}
+else
+{
+    <ul class="list-unstyled mb-0">
+    @foreach (var d in directorates.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name))
+    {
+        <li class="mb-3">
+            <div class="fw-semibold">
+                <i class="bi bi-building me-1"></i>@d.Name
+                <span class="text-muted small">(@d.Code)</span>
+                @if (!d.IsActive) { <span class="badge bg-secondary">Pasif</span> }
+            </div>
+            @if (branchesByParent.TryGetValue(d.Id, out var branches) && branches.Count > 0)
+            {
+                <ul class="mt-2 mb-0">
+                @foreach (var b in branches)
+                {
+                    <li>
+                        <i class="bi bi-diagram-2 me-1 text-muted"></i>@b.Name
+                        <span class="text-muted small">(@b.Code)</span>
+                        @if (!b.IsActive) { <span class="badge bg-secondary">Pasif</span> }
+                    </li>
+                }
+                </ul>
+            }
+        </li>
+    }
+    </ul>
+}
+</div></div>

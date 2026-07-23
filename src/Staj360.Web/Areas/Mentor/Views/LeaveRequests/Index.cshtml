@@ -1,0 +1,30 @@
+@model IReadOnlyList<Staj360.Domain.Entities.LeaveRequest>
+@{
+    ViewData["Title"] = "İzin Talepleri";
+}
+<h1 class="h4 mb-3">Stajyer İzinleri</h1>
+<p class="text-muted small mb-3">İzin onayları yöneticiler tarafından yapılır. Bu ekran yalnızca görüntülemedir.</p>
+<div class="card"><div class="card-body p-0">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-calendar-x"></i><p>İzin kaydı bulunmuyor.</p></div>
+}
+else
+{
+    <table class="table mb-0 align-middle">
+        <thead><tr><th>Stajyer</th><th>Tür</th><th>Tarih</th><th>Durum</th><th>Açıklama</th></tr></thead>
+        <tbody>
+        @foreach (var l in Model)
+        {
+            <tr>
+                <td>@l.InternshipPeriod?.InternProfile?.StudentNumber</td>
+                <td>@DisplayText.Of(l.LeaveType)</td>
+                <td>@l.StartDate.ToString("dd.MM.yyyy") - @l.EndDate.ToString("dd.MM.yyyy")</td>
+                <td><span class="badge @DisplayText.BadgeClass(l.Status)">@DisplayText.Of(l.Status)</span></td>
+                <td class="text-muted">@l.Reason</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+</div></div>

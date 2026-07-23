@@ -1,0 +1,21 @@
+@model Staj360.Domain.Entities.InternProfile
+@{
+    ViewData["Title"] = "Profilim";
+    string MaskNationalId(string? id) => string.IsNullOrEmpty(id) || id.Length < 4 ? "-" : new string('*', id.Length - 4) + id[^4..];
+}
+<h1 class="h4 mb-3">Profilim</h1>
+<div class="card"><div class="card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-4">Öğrenci Numarası</dt><dd class="col-sm-8">@Model.StudentNumber</dd>
+        <dt class="col-sm-4">T.C. Kimlik No</dt><dd class="col-sm-8">@MaskNationalId(Model.NationalId)</dd>
+        <dt class="col-sm-4">Şube</dt><dd class="col-sm-8">@(Model.CurrentOrganizationUnit?.Name ?? "-")</dd>
+        <dt class="col-sm-4">Üniversite</dt><dd class="col-sm-8">@(Model.University ?? "-")</dd>
+        <dt class="col-sm-4">Fakülte</dt><dd class="col-sm-8">@(Model.Faculty ?? "-")</dd>
+        <dt class="col-sm-4">Bölüm</dt><dd class="col-sm-8">@(Model.SchoolDepartment ?? "-")</dd>
+        <dt class="col-sm-4">Sınıf</dt><dd class="col-sm-8">@(Model.ClassLevel ?? "-")</dd>
+        <dt class="col-sm-4">Telefon</dt><dd class="col-sm-8">@(Model.PhoneNumber ?? "-")</dd>
+        <dt class="col-sm-4">Adres</dt><dd class="col-sm-8" style="white-space:pre-wrap">@(Model.Address ?? "-")</dd>
+        <dt class="col-sm-4">Acil Durum Kişisi</dt><dd class="col-sm-8">@(Model.EmergencyContactName ?? "-")</dd>
+        <dt class="col-sm-4">Acil Durum Telefonu</dt><dd class="col-sm-8">@(Model.EmergencyContactPhone ?? "-")</dd>
+    </dl>
+</div></div>

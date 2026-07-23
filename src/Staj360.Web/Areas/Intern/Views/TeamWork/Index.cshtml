@@ -1,0 +1,213 @@
+@model Staj360.Web.Areas.Intern.Models.TeamWorkIndexViewModel
+@{
+    ViewData["Title"] = "Ekip Günlükleri";
+    var projects = Model.Projects;
+    var reports = Model.Reports;
+}
+<h1 class="h4 mb-3">Ekip Günlükleri</h1>
+<p class="text-muted small">Diğer stajyerlerin paylaşılabilir günlük raporlarını ve proje çalışmalarını salt okunur görüntüleyebilirsiniz. Taslak, reddedilmiş raporlar ve mentor notları paylaşılmaz.</p>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(Model.Tab == "reports" ? "active" : null)"
+           asp-action="Index" asp-route-tab="reports"
+           asp-route-internName="@Model.InternName" asp-route-projectId="@Model.ProjectId"
+           asp-route-reportStatus="@Model.ReportStatus"
+           asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">Günlük Raporlar</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(Model.Tab == "projects" ? "active" : null)"
+           asp-action="Index" asp-route-tab="projects"
+           asp-route-internName="@Model.InternName" asp-route-status="@Model.Status"
+           asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">Projeler</a>
+    </li>
+</ul>
+
+<form method="get" class="card card-body mb-3">
+    <input type="hidden" name="tab" value="@Model.Tab" />
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small text-muted mb-0">Stajyer adı</label>
+            <input type="text" name="internName" value="@Model.InternName" class="form-control" placeholder="Ad soyad..." />
+        </div>
+        @if (Model.Tab == "reports")
+        {
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-0">Proje</label>
+                <select name="projectId" class="form-select" asp-items="Model.ProjectOptions">
+                    <option value="">Tümü</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-0">Rapor durumu</label>
+                <select name="reportStatus" class="form-select">
+                    <option value="">Tümü</option>
+                    @foreach (var s in new[] { DailyReportStatus.Submitted, DailyReportStatus.Approved })
+                    {
+                        if (Model.ReportStatus == s)
+                        {
+                            <option value="@((int)s)" selected>@DisplayText.Of(s)</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)s)">@DisplayText.Of(s)</option>
+                        }
+                    }
+                </select>
+            </div>
+        }
+        else
+        {
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-0">Proje durumu</label>
+                <select name="status" class="form-select">
+                    <option value="">Tümü</option>
+                    @foreach (ProjectStatus s in Enum.GetValues(typeof(ProjectStatus)))
+                    {
+                        if (Model.Status == s)
+                        {
+                            <option value="@((int)s)" selected>@DisplayText.Of(s)</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)s)">@DisplayText.Of(s)</option>
+                        }
+                    }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <label class="form-label small text-muted mb-0">Başlangıç</label>
+            <input type="date" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-muted mb-0">Bitiş</label>
+            <input type="date" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-outline-primary">Filtrele</button>
+            <a asp-action="Index" asp-route-tab="@Model.Tab" class="btn btn-outline-secondary">Filtreleri Temizle</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.Tab == "projects")
+{
+    <div class="card"><div class="card-body p-0">
+    @if (projects is null || projects.Items.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-kanban"></i><p>Görüntülenecek proje bulunamadı.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Stajyer</th>
+                        <th>Proje</th>
+                        <th>Açıklama</th>
+                        <th>Durum</th>
+                        <th>Başlangıç</th>
+                        <th>Bitiş</th>
+                        <th>Rol</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var p in projects.Items)
+                {
+                    <tr>
+                        <td class="fw-semibold">@p.InternFullName</td>
+                        <td>
+                            <a asp-area="Intern" asp-controller="MyProjects" asp-action="Details" asp-route-id="@p.ProjectId"
+                               class="text-decoration-none fw-semibold">@p.ProjectName</a>
+                        </td>
+                        <td class="text-muted small">@(string.IsNullOrWhiteSpace(p.ProjectDescription) ? "—" : p.ProjectDescription)</td>
+                        <td><span class="badge @DisplayText.BadgeClass(p.Status)">@DisplayText.Of(p.Status)</span></td>
+                        <td>@p.StartDate.ToString("dd.MM.yyyy")</td>
+                        <td>@(p.EndDate?.ToString("dd.MM.yyyy") ?? "—")</td>
+                        <td>@(p.RoleDescription ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    </div></div>
+    @if (projects is not null && projects.TotalPages > 1)
+    {
+        <nav class="mt-3"><ul class="pagination flex-wrap">
+            @for (int p = 1; p <= projects.TotalPages; p++)
+            {
+                <li class="page-item @(p == projects.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-tab="projects" asp-route-page="@p"
+                       asp-route-internName="@Model.InternName" asp-route-status="@Model.Status"
+                       asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                       asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">@p</a>
+                </li>
+            }
+        </ul></nav>
+    }
+}
+else
+{
+    <div class="card"><div class="card-body p-0">
+    @if (reports is null || reports.Items.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-journal-text"></i><p>Filtrelere uygun günlük rapor bulunamadı.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Stajyer</th>
+                        <th>Rapor Tarihi</th>
+                        <th>Proje</th>
+                        <th>Yapılan İşler</th>
+                        <th>Süre (dk)</th>
+                        <th>Teknolojiler</th>
+                        <th>Durum</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in reports.Items)
+                {
+                    <tr>
+                        <td class="fw-semibold">@r.InternFullName</td>
+                        <td>@r.ReportDate.ToString("dd.MM.yyyy")</td>
+                        <td>@(r.ProjectName ?? "—")</td>
+                        <td class="small">@r.WorkSummary</td>
+                        <td>@r.TotalDurationMinutes</td>
+                        <td class="small">@(r.TechnologiesUsed ?? "—")</td>
+                        <td><span class="badge @DisplayText.BadgeClass(r.Status)">@DisplayText.Of(r.Status)</span></td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="ReportDetails" asp-route-id="@r.ReportId">Detayı Gör</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    </div></div>
+    @if (reports is not null && reports.TotalPages > 1)
+    {
+        <nav class="mt-3"><ul class="pagination flex-wrap">
+            @for (int p = 1; p <= reports.TotalPages; p++)
+            {
+                <li class="page-item @(p == reports.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-tab="reports" asp-route-page="@p"
+                       asp-route-internName="@Model.InternName" asp-route-projectId="@Model.ProjectId"
+                       asp-route-reportStatus="@Model.ReportStatus"
+                       asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                       asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">@p</a>
+                </li>
+            }
+        </ul></nav>
+    }
+}

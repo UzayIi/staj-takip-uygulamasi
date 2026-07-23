@@ -1,0 +1,33 @@
+@model Staj360.Web.Areas.Intern.Models.CreateFeedbackViewModel
+@{
+    ViewData["Title"] = "Yeni Geri Bildirim";
+}
+<h1 class="h4 mb-3">Yeni Geri Bildirim</h1>
+<div class="card"><div class="card-body">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+        <div class="mb-3">
+            <label asp-for="AdvisorUserId" class="form-label"></label>
+            <select asp-for="AdvisorUserId" asp-items="Model.Advisors" class="form-select"><option value="">Seçiniz...</option></select>
+            <span asp-validation-for="AdvisorUserId" class="text-danger small"></span>
+            @if (Model.Advisors.Count == 0)
+            {
+                <div class="form-text text-warning">Atanmış danışman bulunamadı.</div>
+            }
+        </div>
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Message" class="form-label"></label>
+            <textarea asp-for="Message" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Message" class="text-danger small"></span>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Gönder</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

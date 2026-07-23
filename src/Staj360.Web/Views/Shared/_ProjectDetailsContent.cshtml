@@ -1,0 +1,188 @@
+@model Staj360.Web.Models.ProjectDetailsPageViewModel
+@{
+    var d = Model.Details;
+    var s = d.Summary;
+}
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-4 col-xl">
+        <div class="card h-100"><div class="card-body py-3">
+            <div class="text-muted small">Toplam görev</div>
+            <div class="fs-4 fw-semibold">@s.TotalTasks</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+        <div class="card h-100"><div class="card-body py-3">
+            <div class="text-muted small">Tamamlanan</div>
+            <div class="fs-4 fw-semibold text-success">@s.CompletedTasks</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+        <div class="card h-100"><div class="card-body py-3">
+            <div class="text-muted small">Bekleyen</div>
+            <div class="fs-4 fw-semibold text-warning">@s.PendingTasks</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+        <div class="card h-100"><div class="card-body py-3">
+            <div class="text-muted small">Günlük rapor</div>
+            <div class="fs-4 fw-semibold">@s.TotalDailyReports</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+        <div class="card h-100"><div class="card-body py-3">
+            <div class="text-muted small">Ekip</div>
+            <div class="fs-4 fw-semibold">@s.TeamMemberCount</div>
+        </div></div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header bg-white fw-semibold">Genel Bilgiler</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="text-muted small">Açıklama</div>
+                <p class="mb-0">@(string.IsNullOrWhiteSpace(d.Description) ? "—" : d.Description)</p>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Durum</div>
+                <div><span class="badge @DisplayText.BadgeClass(d.Status)">@DisplayText.Of(d.Status)</span></div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted small">Başlangıç</div>
+                <div>@d.StartDate.ToString("dd.MM.yyyy")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted small">Bitiş</div>
+                <div>@(d.EndDate?.ToString("dd.MM.yyyy") ?? "—")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted small">Oluşturulma</div>
+                <div>@d.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted small">İlerleme</div>
+                <div class="progress" style="height:18px"><div class="progress-bar" style="width:@(d.ProgressPercentage)%">@d.ProgressPercentage%</div></div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Birim</div>
+                <div>@d.OrganizationUnitName</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Sorumlu mentor</div>
+                <div>@d.MentorFullName</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Teknolojiler</div>
+                <div>@(d.TechnologiesSummary ?? "—")</div>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(d.RepositoryUrl))
+            {
+                <div class="col-12">
+                    <div class="text-muted small">Depo</div>
+                    <a href="@d.RepositoryUrl" rel="noopener noreferrer" target="_blank">@d.RepositoryUrl</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header bg-white fw-semibold">Proje Ekibi</div>
+    <div class="card-body p-0">
+        @if (d.Team.Count == 0)
+        {
+            <div class="empty-state py-4"><p class="mb-0">Atanmış stajyer yok.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead><tr><th>Stajyer</th><th>Rol</th><th>Staj dönemi</th><th>Dönem durumu</th></tr></thead>
+                    <tbody>
+                    @foreach (var m in d.Team)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@m.FullName</td>
+                            <td>@(m.RoleDescription ?? "—")</td>
+                            <td>@(m.PeriodLabel ?? "—")</td>
+                            <td>@(m.PeriodStatus.HasValue ? DisplayText.Of(m.PeriodStatus.Value) : "—")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header bg-white fw-semibold">Görevler</div>
+    <div class="card-body p-0">
+        @if (d.Tasks.Count == 0)
+        {
+            <div class="empty-state py-4"><p class="mb-0">Görev bulunmuyor.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead><tr><th>Başlık</th><th>Sorumlu</th><th>Durum</th><th>Öncelik</th><th>Teslim</th><th>Tamamlanma</th></tr></thead>
+                    <tbody>
+                    @foreach (var t in d.Tasks)
+                    {
+                        <tr>
+                            <td>@t.Title</td>
+                            <td>@(t.AssignedInternFullName ?? "—")</td>
+                            <td><span class="badge @DisplayText.BadgeClass(t.Status)">@DisplayText.Of(t.Status)</span></td>
+                            <td>@DisplayText.Of(t.Priority)</td>
+                            <td>@(t.DueDate?.ToString("dd.MM.yyyy") ?? "—")</td>
+                            <td>@(t.CompletedAtUtc?.ToLocalTime().ToString("dd.MM.yyyy") ?? "—")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header bg-white fw-semibold">Projeye Ait Günlük Raporlar</div>
+    <div class="card-body p-0">
+        @if (d.DailyReports.Count == 0)
+        {
+            <div class="empty-state py-4"><p class="mb-0">Paylaşılabilir günlük rapor bulunamadı.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead><tr><th>Stajyer</th><th>Tarih</th><th>Çalışmalar</th><th>Süre</th><th>Durum</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var r in d.DailyReports)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@r.InternFullName</td>
+                            <td>@r.ReportDate.ToString("dd.MM.yyyy")</td>
+                            <td class="small">@r.WorkSummary</td>
+                            <td>@r.TotalDurationMinutes dk</td>
+                            <td><span class="badge @DisplayText.BadgeClass(r.Status)">@DisplayText.Of(r.Status)</span></td>
+                            <td class="text-end">
+                                @if (!string.IsNullOrEmpty(Model.ReportDetailsController))
+                                {
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       asp-area="@Model.ReportDetailsArea"
+                                       asp-controller="@Model.ReportDetailsController"
+                                       asp-action="@(Model.ReportDetailsAction ?? "Details")"
+                                       asp-route-id="@r.ReportId">Detay</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

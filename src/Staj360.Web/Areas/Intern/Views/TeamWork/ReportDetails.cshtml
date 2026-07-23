@@ -1,0 +1,83 @@
+@model Staj360.Application.Services.TeamWork.TeamReportDetailDto
+@{
+    ViewData["Title"] = "Günlük Rapor Detayı";
+}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h4 mb-0">Günlük Rapor Detayı</h1>
+    <a asp-action="Index" asp-route-tab="reports" class="btn btn-outline-secondary btn-sm">Ekip Günlüklerine Dön</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="text-muted small">Stajyer</div>
+                <div class="fw-semibold">@Model.InternFullName</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Tarih</div>
+                <div>@Model.ReportDate.ToString("dd.MM.yyyy")</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Durum</div>
+                <div><span class="badge @DisplayText.BadgeClass(Model.Status)">@DisplayText.Of(Model.Status)</span></div>
+            </div>
+            <div class="col-md-6">
+                <div class="text-muted small">Proje</div>
+                <div>@(Model.ProjectName ?? "—")</div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted small">Çalışma süresi</div>
+                <div>@Model.TotalDurationMinutes dk</div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-muted small">Teknolojiler</div>
+                <div>@(Model.TechnologiesUsed ?? "—")</div>
+            </div>
+            <div class="col-12">
+                <div class="text-muted small">Yapılan çalışmalar</div>
+                <p class="mb-0">@Model.WorkSummary</p>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.ProblemsEncountered))
+            {
+                <div class="col-md-6">
+                    <div class="text-muted small">Karşılaşılan problemler</div>
+                    <p class="mb-0">@Model.ProblemsEncountered</p>
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.SolutionsApplied))
+            {
+                <div class="col-md-6">
+                    <div class="text-muted small">Çözüm / açıklama</div>
+                    <p class="mb-0">@Model.SolutionsApplied</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (Model.WorkItems.Count > 0)
+{
+    <div class="card">
+        <div class="card-header bg-white fw-semibold">İş Kalemleri</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead><tr><th>Başlık</th><th>Açıklama</th><th>Süre</th><th>Teknoloji</th><th>Proje</th></tr></thead>
+                    <tbody>
+                    @foreach (var w in Model.WorkItems)
+                    {
+                        <tr>
+                            <td>@w.Title</td>
+                            <td class="small">@(w.Description ?? "—")</td>
+                            <td>@w.DurationMinutes dk</td>
+                            <td>@(w.TechnologiesUsed ?? "—")</td>
+                            <td>@(w.ProjectName ?? "—")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
