@@ -2,10 +2,7 @@
 @{
     ViewData["Title"] = "Transferler";
 }
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">Stajyer Transferleri</h1>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-arrow-left-right"></i> Doğrudan Transfer</a>
-</div>
+<h1 class="h4 mb-3">Stajyer Transferleri (Salt Okunur)</h1>
 <div class="card"><div class="card-body p-0">
 @if (Model.Count == 0)
 {
@@ -14,7 +11,7 @@
 else
 {
     <table class="table table-hover mb-0 align-middle">
-        <thead><tr><th>Stajyer</th><th>Kaynak</th><th>Hedef</th><th>Durum</th><th>Tarih</th></tr></thead>
+        <thead><tr><th>Stajyer</th><th>Kaynak</th><th>Hedef</th><th>Durum</th><th>Tarih</th><th></th></tr></thead>
         <tbody>
         @foreach (var t in Model)
         {
@@ -24,6 +21,7 @@ else
                 <td>@(t.TargetOrganizationUnit?.Name ?? "—")</td>
                 <td><span class="badge bg-secondary">@t.Status</span></td>
                 <td>@t.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                <td class="text-end"><a asp-action="Details" asp-route-id="@t.Id" class="btn btn-sm btn-outline-primary">Detay</a></td>
             </tr>
         }
         </tbody>

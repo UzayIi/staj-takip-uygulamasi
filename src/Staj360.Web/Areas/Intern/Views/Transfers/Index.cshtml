@@ -1,0 +1,28 @@
+@model IReadOnlyList<Staj360.Domain.Entities.InternTransferRequest>
+@{
+    ViewData["Title"] = "Transfer Geçmişim";
+}
+<h1 class="h4 mb-3">Transfer Geçmişim</h1>
+<div class="card"><div class="card-body p-0">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Tamamlanmış transfer kaydı bulunmuyor.</p></div>
+}
+else
+{
+    <table class="table table-hover mb-0 align-middle">
+        <thead><tr><th>Kaynak</th><th>Hedef</th><th>Durum</th><th>Tarih</th></tr></thead>
+        <tbody>
+        @foreach (var t in Model)
+        {
+            <tr>
+                <td>@(t.SourceOrganizationUnit?.Name ?? "—")</td>
+                <td>@(t.TargetOrganizationUnit?.Name ?? "—")</td>
+                <td><span class="badge bg-secondary">@t.Status</span></td>
+                <td>@t.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+</div></div>

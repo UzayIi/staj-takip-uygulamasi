@@ -432,6 +432,7 @@ FodyWeavers.xsd
 .idea/
 TestResults/
 coverage/
+.env
 .env.*
 !.env.example
 secrets.json
@@ -439,6 +440,7 @@ secrets.json
 *.key
 *.pem
 *.p12
+*.cer
 *.crt
 *.bak
 *.trn

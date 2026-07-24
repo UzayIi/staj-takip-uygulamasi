@@ -90,6 +90,7 @@ public class InternTransferRequestConfiguration : IEntityTypeConfiguration<Inter
         b.HasIndex(x => x.Status);
         b.HasIndex(x => x.TargetOrganizationUnitId);
         b.HasIndex(x => x.InternProfileId);
+        b.HasIndex(x => x.PlannedStartDate);
 
         b.HasOne(x => x.InternProfile)
             .WithMany(i => i.TransferRequests)
@@ -256,10 +257,16 @@ public class DailyReportConfiguration : IEntityTypeConfiguration<DailyReport>
         // Aynı staj dönemi ve tarih için yalnızca bir DailyReport olabilir.
         b.HasIndex(x => new { x.InternshipPeriodId, x.ReportDate }).IsUnique();
         b.HasIndex(x => x.Status);
+        b.HasIndex(x => x.OrganizationUnitId);
 
         b.HasOne(x => x.InternshipPeriod)
             .WithMany(p => p.DailyReports)
             .HasForeignKey(x => x.InternshipPeriodId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        b.HasOne(x => x.OrganizationUnit)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationUnitId)
             .OnDelete(DeleteBehavior.Restrict);
 
         b.HasQueryFilter(x => !x.IsDeleted);
@@ -448,9 +455,46 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         b.Property(x => x.EntityName).HasMaxLength(150).IsRequired();
         b.Property(x => x.EntityId).HasMaxLength(100).IsRequired();
         b.Property(x => x.Action).HasMaxLength(100).IsRequired();
+        b.Property(x => x.ActorNameSnapshot).HasMaxLength(200);
+        b.Property(x => x.ActorRoleSnapshot).HasMaxLength(100);
+        b.Property(x => x.SafeDescription).HasMaxLength(500);
         b.Property(x => x.IpAddress).HasMaxLength(64);
+        b.Property(x => x.UserAgent).HasMaxLength(512);
+        b.Property(x => x.RequestMethod).HasMaxLength(16);
+        b.Property(x => x.RequestPath).HasMaxLength(500);
+        b.Property(x => x.FailureReasonCode).HasMaxLength(100);
+        b.Property(x => x.CorrelationId).HasMaxLength(64);
+
         b.HasIndex(x => new { x.EntityName, x.EntityId });
         b.HasIndex(x => x.CreatedAtUtc);
+        b.HasIndex(x => x.ActorUserId);
+        b.HasIndex(x => x.Action);
+        b.HasIndex(x => x.OrganizationUnitId);
+        b.HasIndex(x => x.IpAddress);
+    }
+}
+
+public class StaffMessageConfiguration : IEntityTypeConfiguration<StaffMessage>
+{
+    public void Configure(EntityTypeBuilder<StaffMessage> b)
+    {
+        b.Property(x => x.Subject).HasMaxLength(200).IsRequired();
+        b.Property(x => x.Body).HasMaxLength(4000).IsRequired();
+        b.HasIndex(x => x.ThreadId);
+        b.HasIndex(x => x.SenderUserId);
+        b.HasIndex(x => x.RecipientUserId);
+        b.HasIndex(x => x.SentAtUtc);
+        b.HasIndex(x => new { x.RecipientUserId, x.IsRead });
+
+        b.HasOne(x => x.OrganizationUnit)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationUnitId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        b.HasOne(x => x.ParentMessage)
+            .WithMany()
+            .HasForeignKey(x => x.ParentMessageId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 

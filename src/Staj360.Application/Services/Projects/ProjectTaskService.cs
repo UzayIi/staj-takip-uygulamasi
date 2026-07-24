@@ -42,7 +42,16 @@ public class ProjectTaskService : IProjectTaskService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<ServiceResult<ProjectTask>> CreateAsync(Guid actingUserId, bool isAdmin, CreateProjectTaskCommand command, CancellationToken cancellationToken = default)
+    public Task<ServiceResult<ProjectTask>> CreateAsync(Guid actingUserId, bool isAdmin, CreateProjectTaskCommand command, CancellationToken cancellationToken = default) =>
+        CreateAsync(actingUserId, isAdmin, isManager: false, managedUnitIds: null, command, cancellationToken);
+
+    public async Task<ServiceResult<ProjectTask>> CreateAsync(
+        Guid actingUserId,
+        bool isAdmin,
+        bool isManager,
+        IReadOnlyCollection<Guid>? managedUnitIds,
+        CreateProjectTaskCommand command,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(command.Title))
             return ServiceResult<ProjectTask>.Fail("Görev başlığı zorunludur.", "VALIDATION");
@@ -51,7 +60,10 @@ public class ProjectTaskService : IProjectTaskService
         if (project is null)
             return ServiceResult<ProjectTask>.Fail("Proje bulunamadı.", "NOT_FOUND");
 
-        if (!isAdmin && project.MentorUserId != actingUserId)
+        var allowed = isAdmin
+            || project.MentorUserId == actingUserId
+            || (isManager && managedUnitIds is not null && managedUnitIds.Contains(project.OrganizationUnitId));
+        if (!allowed)
             return ServiceResult<ProjectTask>.Fail("Bu projede görev oluşturma yetkiniz yok.", "FORBIDDEN");
 
         var task = new ProjectTask
@@ -67,7 +79,8 @@ public class ProjectTaskService : IProjectTaskService
         };
         _db.ProjectTasks.Add(task);
         await _db.SaveChangesAsync(cancellationToken);
-        await _audit.LogAsync(nameof(ProjectTask), task.Id.ToString(), "Create", cancellationToken: cancellationToken);
+        await _audit.LogAsync(nameof(ProjectTask), task.Id.ToString(), "Create",
+            organizationUnitId: project.OrganizationUnitId, cancellationToken: cancellationToken);
         return ServiceResult<ProjectTask>.Ok(task);
     }
 

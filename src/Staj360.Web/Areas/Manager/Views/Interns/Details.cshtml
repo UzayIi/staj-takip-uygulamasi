@@ -1,0 +1,18 @@
+@model Staj360.Application.Services.Internships.InternDetailDto
+@{
+    ViewData["Title"] = "Stajyer Detayı";
+    ViewData["ExcelArea"] = "Manager";
+}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h1 class="h4 mb-0">@Model.FullName</h1>
+        <div class="text-muted small">@Model.StudentNumber</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportExcel" asp-route-id="@Model.InternProfileId" class="btn btn-success btn-sm">
+            <i class="bi bi-file-earmark-excel"></i> Excel
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Listeye Dön</a>
+    </div>
+</div>
+<partial name="~/Views/Shared/Interns/_InternDetails.cshtml" model="Model" />

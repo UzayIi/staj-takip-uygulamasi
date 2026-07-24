@@ -13,5 +13,12 @@ public interface IProjectTaskService
     Task<IReadOnlyList<ProjectTask>> ListForProjectAsync(Guid projectId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ProjectTask>> ListForInternAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<ServiceResult<ProjectTask>> CreateAsync(Guid actingUserId, bool isAdmin, CreateProjectTaskCommand command, CancellationToken cancellationToken = default);
+    Task<ServiceResult<ProjectTask>> CreateAsync(
+        Guid actingUserId,
+        bool isAdmin,
+        bool isManager,
+        IReadOnlyCollection<Guid>? managedUnitIds,
+        CreateProjectTaskCommand command,
+        CancellationToken cancellationToken = default);
     Task<ServiceResult> UpdateStatusByInternAsync(Guid userId, Guid taskId, ProjectTaskStatus status, CancellationToken cancellationToken = default);
 }

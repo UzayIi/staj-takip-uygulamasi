@@ -4,11 +4,6 @@ namespace Staj360.Web.Areas.Intern.Models;
 
 public class CreateDailyReportViewModel
 {
-    [Required]
-    [DataType(DataType.Date)]
-    [Display(Name = "Rapor Tarihi")]
-    public DateOnly ReportDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
-
     [Display(Name = "Genel Notlar")]
     [StringLength(4000)]
     public string? GeneralNotes { get; set; }

@@ -9,6 +9,7 @@ using Staj360.Application.Services.Exports;
 using Staj360.Application.Services.Internships;
 using Staj360.Application.Services.Organization;
 using Staj360.Web.Areas.Admin.Models;
+using Staj360.Web.Helpers;
 
 namespace Staj360.Web.Areas.Admin.Controllers;
 
@@ -20,6 +21,7 @@ public class InternsController : Controller
     private readonly IOrganizationUnitService _organizationUnitService;
     private readonly IUserAccountService _accountService;
     private readonly IInternExcelExportService _excelExport;
+    private readonly IInternDetailService _details;
     private readonly IApplicationDbContext _db;
 
     public InternsController(
@@ -27,12 +29,14 @@ public class InternsController : Controller
         IOrganizationUnitService organizationUnitService,
         IUserAccountService accountService,
         IInternExcelExportService excelExport,
+        IInternDetailService details,
         IApplicationDbContext db)
     {
         _internService = internService;
         _organizationUnitService = organizationUnitService;
         _accountService = accountService;
         _excelExport = excelExport;
+        _details = details;
         _db = db;
     }
 
@@ -67,9 +71,23 @@ public class InternsController : Controller
         return View(result);
     }
 
+    public async Task<IActionResult> Details(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _details.GetForViewerAsync(
+            User.GetUserId(), isAdmin: true, isManager: false, isMentor: false, id, cancellationToken);
+        if (!result.Success)
+            return NotFound();
+        return View(result.Data);
+    }
+
     [HttpGet]
     public async Task<IActionResult> ExportExcel(Guid id, CancellationToken cancellationToken)
     {
+        var scope = await _details.GetForViewerAsync(
+            User.GetUserId(), isAdmin: true, isManager: false, isMentor: false, id, cancellationToken);
+        if (!scope.Success)
+            return NotFound();
+
         var export = await _excelExport.ExportAsync(id, cancellationToken);
         if (export is null)
             return NotFound();

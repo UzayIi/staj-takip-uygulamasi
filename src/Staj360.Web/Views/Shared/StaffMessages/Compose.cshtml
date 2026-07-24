@@ -1,0 +1,63 @@
+@model Staj360.Web.Controllers.ComposeStaffMessageForm
+@{
+    ViewData["Title"] = "Yeni Mesaj";
+    var area = (string)ViewData["AreaName"]!;
+    var recipients = ViewBag.Recipients as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+    var unitsMap = ViewBag.UnitsByRecipient as Dictionary<string, List<SelectListItem>> ?? new();
+}
+<h1 class="h4 mb-3">Yeni Mesaj</h1>
+<form asp-area="@area" asp-controller="Messages" asp-action="Compose" method="post" class="card"><div class="card-body">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="mb-3">
+        <label class="form-label" for="RecipientUserId">Alıcı</label>
+        <select asp-for="RecipientUserId" asp-items="recipients" class="form-select" id="RecipientUserId" required>
+            <option value="">-- Seçiniz --</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label" for="OrganizationUnitId">Ortak birim</label>
+        <select asp-for="OrganizationUnitId" class="form-select" id="OrganizationUnitId" required>
+            <option value="">-- Önce alıcı seçin --</option>
+        </select>
+        <div class="form-text">Yalnızca sizin ve alıcının ortak aktif şube atamaları listelenir.</div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label" asp-for="Subject">Konu</label>
+        <input asp-for="Subject" class="form-control" maxlength="200" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label" asp-for="Body">Mesaj</label>
+        <textarea asp-for="Body" class="form-control" rows="6" maxlength="4000" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Gönder</button>
+    <a asp-area="@area" asp-controller="Messages" asp-action="Inbox" class="btn btn-outline-secondary">İptal</a>
+</div></form>
+
+@section Scripts {
+<script>
+(function () {
+    var map = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        unitsMap.ToDictionary(kv => kv.Key, kv => kv.Value.Select(i => new { value = i.Value, text = i.Text }).ToList())));
+    var recipient = document.getElementById('RecipientUserId');
+    var unit = document.getElementById('OrganizationUnitId');
+    function refresh() {
+        unit.innerHTML = '';
+        var opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.textContent = '-- Seçiniz --';
+        unit.appendChild(opt0);
+        var list = map[recipient.value] || [];
+        list.forEach(function (u) {
+            var o = document.createElement('option');
+            o.value = u.value;
+            o.textContent = u.text;
+            unit.appendChild(o);
+        });
+        if (list.length === 1) unit.value = list[0].value;
+    }
+    recipient.addEventListener('change', refresh);
+    refresh();
+})();
+</script>
+}

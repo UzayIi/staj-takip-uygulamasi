@@ -1,7 +1,9 @@
 namespace Staj360.Application.Services.DailyReports;
 
+/// <summary>
+/// Rapor tarihi istemciden alınmaz; sunucu Europe/Istanbul gününü kullanır.
+/// </summary>
 public record CreateDailyReportCommand(
-    DateOnly ReportDate,
     string? GeneralNotes,
     string? ProblemsEncountered,
     string? SolutionsApplied,

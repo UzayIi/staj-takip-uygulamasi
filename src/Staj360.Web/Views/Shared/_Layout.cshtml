@@ -48,13 +48,16 @@
                     <a class="nav-link @Active("Admin","Transfers")" asp-area="Admin" asp-controller="Transfers" asp-action="Index"><i class="bi bi-arrow-left-right"></i> Transferler</a>
                     <a class="nav-link @Active("Admin","Feedback")" asp-area="Admin" asp-controller="Feedback" asp-action="Index"><i class="bi bi-chat-left-text"></i> Geri Bildirimler</a>
                     <a class="nav-link @Active("Admin","AiSummaries")" asp-area="Admin" asp-controller="AiSummaries" asp-action="Index"><i class="bi bi-robot"></i> Yapay Zekâ Özetleri</a>
-                    <a class="nav-link @Active("Admin","AuditLogs")" asp-area="Admin" asp-controller="AuditLogs" asp-action="Index"><i class="bi bi-shield-check"></i> Denetim Kayıtları</a>
+                    <a class="nav-link @Active("Admin","AuditLogs")" asp-area="Admin" asp-controller="AuditLogs" asp-action="Index"><i class="bi bi-shield-check"></i> Kullanıcı Hareketleri</a>
                 }
                 @if (isManager)
                 {
                     <div class="nav-section">Yönetici</div>
                     <a class="nav-link @Active("Manager","Dashboard")" asp-area="Manager" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i> Gösterge Paneli</a>
                     <a class="nav-link @Active("Manager","Interns")" asp-area="Manager" asp-controller="Interns" asp-action="Index"><i class="bi bi-people"></i> Stajyerler</a>
+                    <a class="nav-link @Active("Manager","Projects")" asp-area="Manager" asp-controller="Projects" asp-action="Index"><i class="bi bi-kanban"></i> Projeler</a>
+                    <a class="nav-link @Active("Manager","DailyReports")" asp-area="Manager" asp-controller="DailyReports" asp-action="Index"><i class="bi bi-journal-text"></i> Günlük Raporlar</a>
+                    <a class="nav-link @Active("Manager","Messages")" asp-area="Manager" asp-controller="Messages" asp-action="Inbox"><i class="bi bi-envelope"></i> Mesajlar</a>
                     <a class="nav-link @Active("Manager","LeaveRequests")" asp-area="Manager" asp-controller="LeaveRequests" asp-action="Index"><i class="bi bi-calendar-x"></i> İzin Talepleri</a>
                     <a class="nav-link @Active("Manager","Transfers")" asp-area="Manager" asp-controller="Transfers" asp-action="Index"><i class="bi bi-arrow-left-right"></i> Transferler</a>
                 }
@@ -65,9 +68,9 @@
                     <a class="nav-link @Active("Mentor","MyInterns")" asp-area="Mentor" asp-controller="MyInterns" asp-action="Index"><i class="bi bi-people"></i> Stajyerlerim</a>
                     <a class="nav-link @Active("Mentor","DailyReports")" asp-area="Mentor" asp-controller="DailyReports" asp-action="Index"><i class="bi bi-journal-text"></i> Günlük Raporlar</a>
                     <a class="nav-link @Active("Mentor","Projects")" asp-area="Mentor" asp-controller="Projects" asp-action="Index"><i class="bi bi-kanban"></i> Projeler</a>
+                    <a class="nav-link @Active("Mentor","Messages")" asp-area="Mentor" asp-controller="Messages" asp-action="Inbox"><i class="bi bi-envelope"></i> Mesajlar</a>
                     <a class="nav-link @Active("Mentor","LeaveRequests")" asp-area="Mentor" asp-controller="LeaveRequests" asp-action="Index"><i class="bi bi-calendar-x"></i> İzinler</a>
                     <a class="nav-link @Active("Mentor","Feedback")" asp-area="Mentor" asp-controller="Feedback" asp-action="Index"><i class="bi bi-chat-left-text"></i> Geri Bildirimler</a>
-                    <a class="nav-link @Active("Mentor","Transfers")" asp-area="Mentor" asp-controller="Transfers" asp-action="Create"><i class="bi bi-arrow-left-right"></i> Transfer Talebi</a>
                     <a class="nav-link @Active("Mentor","Evaluations")" asp-area="Mentor" asp-controller="Evaluations" asp-action="Index"><i class="bi bi-star"></i> Değerlendirmeler</a>
                     <a class="nav-link @Active("Mentor","AiSummaries")" asp-area="Mentor" asp-controller="AiSummaries" asp-action="Index"><i class="bi bi-robot"></i> Yapay Zekâ Özetleri</a>
                 }
@@ -75,13 +78,13 @@
                 {
                     <div class="nav-section">Stajyer</div>
                     <a class="nav-link @Active("Intern","Dashboard")" asp-area="Intern" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i> Gösterge Paneli</a>
-                    <a class="nav-link @Active("Intern","MyAttendance")" asp-area="Intern" asp-controller="MyAttendance" asp-action="Index"><i class="bi bi-clock-history"></i> Devam Durumum</a>
                     <a class="nav-link @Active("Intern","MyDailyReports")" asp-area="Intern" asp-controller="MyDailyReports" asp-action="Index"><i class="bi bi-journal-text"></i> Günlük Raporlarım</a>
                     <a class="nav-link @Active("Intern","MyProjects")" asp-area="Intern" asp-controller="MyProjects" asp-action="Index"><i class="bi bi-kanban"></i> Projeler</a>
                     <a class="nav-link @Active("Intern","TeamWork")" asp-area="Intern" asp-controller="TeamWork" asp-action="Index"><i class="bi bi-journal-richtext"></i> Ekip Günlükleri</a>
                     <a class="nav-link @Active("Intern","MyTasks")" asp-area="Intern" asp-controller="MyTasks" asp-action="Index"><i class="bi bi-list-check"></i> Görevlerim</a>
                     <a class="nav-link @Active("Intern","MyLeaveRequests")" asp-area="Intern" asp-controller="MyLeaveRequests" asp-action="Index"><i class="bi bi-calendar-x"></i> İzinlerim</a>
                     <a class="nav-link @Active("Intern","MyFeedback")" asp-area="Intern" asp-controller="MyFeedback" asp-action="Index"><i class="bi bi-chat-left-text"></i> Geri Bildirimlerim</a>
+                    <a class="nav-link @Active("Intern","Transfers")" asp-area="Intern" asp-controller="Transfers" asp-action="Index"><i class="bi bi-arrow-left-right"></i> Transfer Geçmişim</a>
                     <a class="nav-link @Active("Intern","MySummaries")" asp-area="Intern" asp-controller="MySummaries" asp-action="Index"><i class="bi bi-robot"></i> Özetlerim</a>
                     <a class="nav-link @Active("Intern","MyProfile")" asp-area="Intern" asp-controller="MyProfile" asp-action="Index"><i class="bi bi-person"></i> Profilim</a>
                 }
@@ -154,6 +157,7 @@ else
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
+<script src="~/js/org-unit-tree.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

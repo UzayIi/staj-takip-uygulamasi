@@ -1,0 +1,23 @@
+@model Staj360.Web.Controllers.ComposeStaffMessageForm
+@{
+    ViewData["Title"] = "Yanıtla";
+    var area = (string)ViewData["AreaName"]!;
+    var thread = ViewData["Thread"] as Staj360.Application.Services.Messaging.StaffMessageThreadDto;
+}
+<h1 class="h4 mb-3">Yanıtla — @(thread?.OtherUserName ?? "")</h1>
+<form asp-area="@area" asp-controller="Messages" asp-action="Reply" method="post" class="card"><div class="card-body">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="RecipientUserId" />
+    <input type="hidden" asp-for="OrganizationUnitId" />
+    <input type="hidden" asp-for="ParentMessageId" />
+    <div class="mb-3">
+        <label class="form-label">Konu</label>
+        <input asp-for="Subject" class="form-control" maxlength="200" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Mesaj</label>
+        <textarea asp-for="Body" class="form-control" rows="6" maxlength="4000" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-reply"></i> Gönder</button>
+    <a asp-area="@area" asp-controller="Messages" asp-action="Details" asp-route-id="@Model.ParentMessageId" class="btn btn-outline-secondary">İptal</a>
+</div></form>

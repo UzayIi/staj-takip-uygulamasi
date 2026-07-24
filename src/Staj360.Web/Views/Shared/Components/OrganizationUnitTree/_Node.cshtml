@@ -1,0 +1,71 @@
+@using Staj360.Domain.Enums
+@using Staj360.Web.ViewComponents
+@model (OrganizationUnitTreeNode Node, OrganizationUnitTreeViewModel Tree)
+@{
+    var node = Model.Node;
+    var tree = Model.Tree;
+    var isDir = node.UnitType == OrganizationUnitType.Directorate;
+    var selected = tree.SelectedIds.Contains(node.Id);
+    var hasChildren = node.Children.Count > 0;
+}
+<li class="org-unit-tree-item" role="treeitem"
+    data-name="@node.Name.ToLowerInvariant()"
+    data-breadcrumb="@node.Breadcrumb"
+    data-selectable="@(node.IsSelectable ? "true" : "false")"
+    aria-expanded="@(isDir && hasChildren ? "true" : null)"
+    aria-selected="@(node.IsSelectable ? selected.ToString().ToLowerInvariant() : null)">
+    <div class="org-unit-tree-row d-flex align-items-center gap-2 py-1">
+        @if (isDir && hasChildren)
+        {
+            <button type="button" class="btn btn-sm btn-link p-0 org-unit-tree-toggle" aria-label="@(node.Name) alt birimlerini aç/kapat">
+                <i class="bi bi-chevron-down" aria-hidden="true"></i>
+            </button>
+        }
+        else
+        {
+            <span class="org-unit-tree-spacer" aria-hidden="true"></span>
+        }
+
+        @if (node.IsSelectable)
+        {
+            if (tree.MultiSelect)
+            {
+                <input type="checkbox" class="form-check-input org-unit-tree-input"
+                       name="@tree.InputName" value="@node.Id"
+                       id="@(tree.TreeId)_@node.Id"
+                       @(selected ? "checked" : null)
+                       aria-label="@node.Breadcrumb" />
+            }
+            else
+            {
+                <input type="radio" class="form-check-input org-unit-tree-input"
+                       name="@tree.InputName" value="@node.Id"
+                       id="@(tree.TreeId)_@node.Id"
+                       @(selected ? "checked" : null)
+                       aria-label="@node.Breadcrumb" />
+            }
+            <label class="form-check-label mb-0 org-unit-tree-label" for="@(tree.TreeId)_@node.Id">
+                <i class="bi bi-building text-primary" aria-hidden="true"></i> @node.Name
+            </label>
+        }
+        else
+        {
+            <span class="org-unit-tree-label fw-semibold">
+                <i class="bi bi-diagram-3 text-secondary" aria-hidden="true"></i> @node.Name
+                @if (!node.IsActive)
+                {
+                    <span class="badge bg-secondary ms-1">Pasif</span>
+                }
+            </span>
+        }
+    </div>
+    @if (hasChildren)
+    {
+        <ul class="org-unit-tree-children list-unstyled ms-3 border-start ps-2" role="group">
+            @foreach (var child in node.Children)
+            {
+                @await Html.PartialAsync("~/Views/Shared/Components/OrganizationUnitTree/_Node.cshtml", (child, tree))
+            }
+        </ul>
+    }
+</li>

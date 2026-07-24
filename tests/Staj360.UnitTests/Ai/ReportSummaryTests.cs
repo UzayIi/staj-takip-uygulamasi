@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Staj360.Application.Ai;
 using Staj360.Application.Ai.Models;
 using Staj360.Application.Common;
@@ -86,10 +87,15 @@ public class ReportSummaryTests
         var (db, _, mentorId, periodId, _) = await TestDbFactory.SeedActiveInternAsync(utc, new TimeOnly(9, 0));
         try
         {
+            var unitId = await db.InternshipPeriods.AsNoTracking()
+                .Where(p => p.Id == periodId)
+                .Select(p => p.InternProfile!.CurrentOrganizationUnitId)
+                .FirstAsync();
             db.DailyReports.Add(new DailyReport
             {
                 InternshipPeriodId = periodId,
                 ReportDate = new DateOnly(2026, 7, 12),
+                OrganizationUnitId = unitId,
                 Status = DailyReportStatus.Submitted,
                 GeneralNotes = "henüz onaylı değil",
                 WorkItems = { new DailyWorkItem { Title = "Taslak iş", DurationMinutes = 30 } }
@@ -133,10 +139,16 @@ public class ReportSummaryTests
 
     private static async Task SeedApprovedReportAsync(Staj360.Infrastructure.Persistence.AppDbContext db, Guid periodId, DateOnly date)
     {
+        var unitId = await db.InternshipPeriods.AsNoTracking()
+            .Where(p => p.Id == periodId)
+            .Select(p => p.InternProfile!.CurrentOrganizationUnitId)
+            .FirstAsync();
+
         db.DailyReports.Add(new DailyReport
         {
             InternshipPeriodId = periodId,
             ReportDate = date,
+            OrganizationUnitId = unitId,
             Status = DailyReportStatus.Approved,
             GeneralNotes = "API geliştirme tamamlandı",
             ProblemsEncountered = "Bağımlılık çakışması",

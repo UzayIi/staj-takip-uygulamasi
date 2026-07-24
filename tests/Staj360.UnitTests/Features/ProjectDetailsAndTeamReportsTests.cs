@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Staj360.Application.Abstractions;
 using Staj360.Application.Common;
+using Staj360.Application.Services.Assignments;
 using Staj360.Application.Services.Projects;
 using Staj360.Application.Services.TeamWork;
 using Staj360.Domain.Entities;
@@ -239,6 +240,7 @@ public class ProjectDetailsAndTeamReportsTests
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
         services.AddScoped<IUserDisplayLookup, UserDisplayLookup>();
+        services.AddScoped<IUnitAssignmentService, UnitAssignmentService>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IProjectDetailsService, ProjectDetailsService>();
         services.AddScoped<ITeamWorkService, TeamWorkService>();
@@ -338,18 +340,21 @@ public class ProjectDetailsAndTeamReportsTests
         var draft = new DailyReport
         {
             InternshipPeriodId = periodA.Id, ReportDate = new DateOnly(2026, 7, 1),
+            OrganizationUnitId = unit.Id,
             Status = DailyReportStatus.Draft, GeneralNotes = "Taslak gizli",
             MentorComment = "MentorGizli"
         };
         var submitted = new DailyReport
         {
             InternshipPeriodId = periodA.Id, ReportDate = new DateOnly(2026, 7, 2),
+            OrganizationUnitId = unit.Id,
             Status = DailyReportStatus.Submitted, GeneralNotes = "Gönderilmiş iş",
             WorkItems = { new DailyWorkItem { Title = "API geliştirmesi", DurationMinutes = 120, TechnologiesUsed = "C#", ProjectId = project.Id } }
         };
         var approved = new DailyReport
         {
             InternshipPeriodId = periodA.Id, ReportDate = new DateOnly(2026, 7, 3),
+            OrganizationUnitId = unit.Id,
             Status = DailyReportStatus.Approved, GeneralNotes = "Onaylı iş",
             MentorComment = "MentorGizliOnay",
             WorkItems = { new DailyWorkItem { Title = "UI", DurationMinutes = 90, ProjectId = project.Id } }
@@ -357,6 +362,7 @@ public class ProjectDetailsAndTeamReportsTests
         var rejected = new DailyReport
         {
             InternshipPeriodId = periodA.Id, ReportDate = new DateOnly(2026, 7, 4),
+            OrganizationUnitId = unit.Id,
             Status = DailyReportStatus.Rejected, GeneralNotes = "Red içerik",
             MentorComment = "MentorGizliRed"
         };

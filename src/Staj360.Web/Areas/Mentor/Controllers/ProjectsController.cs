@@ -111,6 +111,19 @@ public class ProjectsController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EndAssignment(Guid id, Guid assignmentId, DateOnly? endDate, CancellationToken cancellationToken)
+    {
+        var date = endDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var result = await _projects.EndAssignmentAsync(
+            User.GetUserId(), isAdmin: false, isManager: false, managedUnitIds: null, id, assignmentId, date, cancellationToken);
+        if (!result.Success && result.ErrorCode == "FORBIDDEN")
+            return Forbid();
+        TempData[result.Success ? "Success" : "Error"] = result.Success ? "Atama sonlandırıldı." : result.ErrorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
     public async Task<IActionResult> CreateTask(CreateTaskViewModel model, CancellationToken cancellationToken)
     {
         var command = new CreateProjectTaskCommand(model.ProjectId, model.AssignedInternProfileId, model.Title, model.Description, model.Priority, model.DueDate, model.EstimatedMinutes);

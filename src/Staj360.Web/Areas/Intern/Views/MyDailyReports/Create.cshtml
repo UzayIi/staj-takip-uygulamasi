@@ -3,13 +3,10 @@
     ViewData["Title"] = "Yeni Günlük Rapor";
 }
 <h1 class="h4 mb-3">Yeni Günlük Rapor</h1>
+<div class="alert alert-info py-2">Rapor tarihi sunucu tarafından (Europe/Istanbul günü) otomatik atanır.</div>
 <div class="card"><div class="card-body">
     <form asp-action="Create" method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
-        <div class="mb-3" style="max-width:240px">
-            <label asp-for="ReportDate" class="form-label"></label>
-            <input asp-for="ReportDate" type="date" class="form-control" />
-        </div>
         <div class="mb-3"><label asp-for="GeneralNotes" class="form-label"></label><textarea asp-for="GeneralNotes" class="form-control" rows="2"></textarea></div>
         <div class="mb-3"><label asp-for="ProblemsEncountered" class="form-label"></label><textarea asp-for="ProblemsEncountered" class="form-control" rows="2"></textarea></div>
         <div class="mb-3"><label asp-for="SolutionsApplied" class="form-label"></label><textarea asp-for="SolutionsApplied" class="form-control" rows="2"></textarea></div>

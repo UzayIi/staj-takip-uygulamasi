@@ -1,0 +1,21 @@
+@model Staj360.Domain.Entities.InternTransferRequest
+@{
+    ViewData["Title"] = "Transfer Detayı";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Transfer Detayı</h1>
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Listeye Dön</a>
+</div>
+<div class="card"><div class="card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Stajyer</dt><dd class="col-sm-9">@(Model.InternProfile?.StudentNumber ?? "—")</dd>
+        <dt class="col-sm-3">Kaynak birim</dt><dd class="col-sm-9">@(Model.SourceOrganizationUnit?.Name ?? "—")</dd>
+        <dt class="col-sm-3">Hedef birim</dt><dd class="col-sm-9">@(Model.TargetOrganizationUnit?.Name ?? "—")</dd>
+        <dt class="col-sm-3">Durum</dt><dd class="col-sm-9"><span class="badge bg-secondary">@Model.Status</span></dd>
+        <dt class="col-sm-3">Planlanan başlangıç</dt><dd class="col-sm-9">@(Model.PlannedStartDate?.ToString("dd.MM.yyyy") ?? "—")</dd>
+        <dt class="col-sm-3">Talep notu</dt><dd class="col-sm-9">@(Model.RequestNote ?? "—")</dd>
+        <dt class="col-sm-3">Karar notu</dt><dd class="col-sm-9">@(Model.DecisionNote ?? "—")</dd>
+        <dt class="col-sm-3">Oluşturulma</dt><dd class="col-sm-9">@Model.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</dd>
+        <dt class="col-sm-3">Karar zamanı</dt><dd class="col-sm-9">@(Model.DecisionAtUtc?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "—")</dd>
+    </dl>
+</div></div>

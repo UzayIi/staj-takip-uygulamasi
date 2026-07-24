@@ -1,0 +1,27 @@
+@model Staj360.Domain.Entities.AuditLog
+@{
+    ViewData["Title"] = "Hareket Detayı";
+    var tz = (Staj360.Application.Abstractions.ITimeZoneService)Context.RequestServices.GetService(typeof(Staj360.Application.Abstractions.ITimeZoneService))!;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Hareket Detayı</h1>
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Listeye Dön</a>
+</div>
+<div class="card"><div class="card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Tarih</dt><dd class="col-sm-9">@tz.ToLocal(Model.CreatedAtUtc).ToString("dd.MM.yyyy HH:mm:ss")</dd>
+        <dt class="col-sm-3">Aktör</dt><dd class="col-sm-9">@(Model.ActorNameSnapshot ?? "—") <span class="text-muted small">(@(Model.ActorUserId?.ToString() ?? Model.UserId?.ToString() ?? "—"))</span></dd>
+        <dt class="col-sm-3">Rol</dt><dd class="col-sm-9">@(Model.ActorRoleSnapshot ?? "—")</dd>
+        <dt class="col-sm-3">İşlem</dt><dd class="col-sm-9"><span class="badge bg-secondary">@Model.Action</span></dd>
+        <dt class="col-sm-3">Varlık</dt><dd class="col-sm-9">@Model.EntityName / @Model.EntityId</dd>
+        <dt class="col-sm-3">Birim Id</dt><dd class="col-sm-9">@(Model.OrganizationUnitId?.ToString() ?? "—")</dd>
+        <dt class="col-sm-3">Açıklama</dt><dd class="col-sm-9">@(Model.SafeDescription ?? "—")</dd>
+        <dt class="col-sm-3">Başarı</dt><dd class="col-sm-9">@(Model.IsSuccessful ? "Evet" : "Hayır") @(Model.FailureReasonCode is null ? "" : $"({Model.FailureReasonCode})")</dd>
+        <dt class="col-sm-3">IP</dt><dd class="col-sm-9">@(Model.IpAddress ?? "—")</dd>
+        <dt class="col-sm-3">User-Agent</dt><dd class="col-sm-9 small text-break">@(Model.UserAgent ?? "—")</dd>
+        <dt class="col-sm-3">İstek</dt><dd class="col-sm-9">@(Model.RequestMethod ?? "—") @(Model.RequestPath ?? "")</dd>
+        <dt class="col-sm-3">Korelasyon</dt><dd class="col-sm-9">@(Model.CorrelationId ?? "—")</dd>
+        <dt class="col-sm-3">Eski değerler</dt><dd class="col-sm-9"><pre class="small mb-0">@(Model.OldValues ?? "—")</pre></dd>
+        <dt class="col-sm-3">Yeni değerler</dt><dd class="col-sm-9"><pre class="small mb-0">@(Model.NewValues ?? "—")</pre></dd>
+    </dl>
+</div></div>

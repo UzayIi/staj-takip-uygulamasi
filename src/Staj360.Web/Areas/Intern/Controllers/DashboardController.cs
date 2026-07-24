@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Staj360.Application.Abstractions;
 using Staj360.Application.Common;
-using Staj360.Application.Services.Attendance;
 using Staj360.Application.Services.Internships;
 using Staj360.Application.Services.Projects;
 using Staj360.Domain.Enums;
@@ -16,7 +15,6 @@ namespace Staj360.Web.Areas.Intern.Controllers;
 [Authorize(Policy = AppPolicies.InternArea)]
 public class DashboardController : Controller
 {
-    private readonly IAttendanceService _attendance;
     private readonly IInternshipPeriodService _periods;
     private readonly IProjectTaskService _tasks;
     private readonly IApplicationDbContext _db;
@@ -24,14 +22,12 @@ public class DashboardController : Controller
     private readonly ITimeZoneService _tz;
 
     public DashboardController(
-        IAttendanceService attendance,
         IInternshipPeriodService periods,
         IProjectTaskService tasks,
         IApplicationDbContext db,
         IClock clock,
         ITimeZoneService tz)
     {
-        _attendance = attendance;
         _periods = periods;
         _tasks = tasks;
         _db = db;
@@ -51,9 +47,6 @@ public class DashboardController : Controller
             var today = _tz.LocalDate(_clock.UtcNow);
             vm.RemainingDays = Math.Max(0, period.EndDate.DayNumber - today.DayNumber);
 
-            var status = await _attendance.GetTodayStatusAsync(userId, cancellationToken);
-            if (status.Success) vm.Today = status.Data;
-
             var report = await _db.DailyReports.AsNoTracking()
                 .FirstOrDefaultAsync(r => r.InternshipPeriodId == period.Id && r.ReportDate == today && !r.IsDeleted, cancellationToken);
             vm.HasTodayReport = report is not null;
@@ -64,25 +57,5 @@ public class DashboardController : Controller
         vm.ActiveTaskCount = tasks.Count(t => t.Status is ProjectTaskStatus.Todo or ProjectTaskStatus.InProgress);
 
         return View(vm);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> CheckIn(CancellationToken cancellationToken)
-    {
-        var userId = User.GetUserId();
-        var context = new AttendanceActionContext(AttendanceSource.WebButton, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
-        var result = await _attendance.CheckInAsync(userId, context, cancellationToken);
-        TempData[result.Success ? "Success" : "Error"] = result.Success ? "Giriş kaydınız alındı." : result.ErrorMessage;
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> CheckOut(CancellationToken cancellationToken)
-    {
-        var userId = User.GetUserId();
-        var context = new AttendanceActionContext(AttendanceSource.WebButton, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
-        var result = await _attendance.CheckOutAsync(userId, context, cancellationToken);
-        TempData[result.Success ? "Success" : "Error"] = result.Success ? "Çıkış kaydınız alındı." : result.ErrorMessage;
-        return RedirectToAction(nameof(Index));
     }
 }

@@ -29,7 +29,7 @@ public class MyDailyReportsController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        var command = new CreateDailyReportCommand(model.ReportDate, model.GeneralNotes, model.ProblemsEncountered, model.SolutionsApplied, model.TomorrowPlan);
+        var command = new CreateDailyReportCommand(model.GeneralNotes, model.ProblemsEncountered, model.SolutionsApplied, model.TomorrowPlan);
         var result = await _service.CreateAsync(User.GetUserId(), command, cancellationToken);
         if (!result.Success)
         {

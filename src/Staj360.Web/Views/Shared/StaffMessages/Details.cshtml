@@ -1,0 +1,36 @@
+@model Staj360.Application.Services.Messaging.StaffMessageThreadDto
+@{
+    ViewData["Title"] = "Mesaj Detayı";
+    var area = (string)ViewData["AreaName"]!;
+    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var tz = (Staj360.Application.Abstractions.ITimeZoneService)Context.RequestServices.GetService(typeof(Staj360.Application.Abstractions.ITimeZoneService))!;
+}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h1 class="h4 mb-1">@Html.Raw(Model.Subject)</h1>
+        <div class="text-muted small">@Model.OtherUserName · @Model.OrganizationUnitName</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-area="@area" asp-controller="Messages" asp-action="Reply" asp-route-id="@Model.Messages.Last().Id" class="btn btn-sm btn-primary"><i class="bi bi-reply"></i> Yanıtla</a>
+        <form asp-area="@area" asp-controller="Messages" asp-action="Archive" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Messages.Last().Id" />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Arşivle</button>
+        </form>
+        <a asp-area="@area" asp-controller="Messages" asp-action="Inbox" class="btn btn-sm btn-outline-secondary">Gelen Kutusu</a>
+    </div>
+</div>
+
+@foreach (var m in Model.Messages)
+{
+    var mine = userId == m.SenderUserId.ToString();
+    <div class="card mb-2 @(mine ? "border-primary" : "")">
+        <div class="card-body">
+            <div class="d-flex justify-content-between small text-muted mb-2">
+                <span>@(mine ? "Siz" : Model.OtherUserName)</span>
+                <span>@tz.ToLocal(m.SentAtUtc).ToString("dd.MM.yyyy HH:mm")</span>
+            </div>
+            <div style="white-space:pre-wrap">@Html.Raw(m.Body)</div>
+        </div>
+    </div>
+}

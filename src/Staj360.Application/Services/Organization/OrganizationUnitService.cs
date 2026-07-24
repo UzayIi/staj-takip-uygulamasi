@@ -14,6 +14,9 @@ public interface IOrganizationUnitService
 {
     Task<IReadOnlyList<OrganizationUnitDto>> ListTreeAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<OrganizationUnitDto>> ListBranchesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<OrganizationUnitDto>> ListDirectoratesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<OrganizationUnitDto>> ListBranchesByDirectorateAsync(Guid directorateId, CancellationToken cancellationToken = default);
+    Task<ServiceResult> ValidateBranchBelongsToDirectorateAsync(Guid branchId, Guid directorateId, CancellationToken cancellationToken = default);
     Task<OrganizationUnitDto?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Guid?> GetIdByCodeAsync(string code, CancellationToken cancellationToken = default);
 }
@@ -41,6 +44,38 @@ public class OrganizationUnitService : IOrganizationUnitService
             .OrderBy(u => u.Parent!.DisplayOrder).ThenBy(u => u.DisplayOrder).ThenBy(u => u.Name)
             .Select(u => new OrganizationUnitDto(u.Id, u.Code, u.Name, u.UnitType, u.ParentId, u.Parent != null ? u.Parent.Name : null, u.DisplayOrder, u.IsActive))
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<OrganizationUnitDto>> ListDirectoratesAsync(CancellationToken cancellationToken = default) =>
+        await _db.OrganizationUnits.AsNoTracking()
+            .Where(u => !u.IsDeleted && u.UnitType == OrganizationUnitType.Directorate && u.IsActive)
+            .OrderBy(u => u.DisplayOrder).ThenBy(u => u.Name)
+            .Select(u => new OrganizationUnitDto(u.Id, u.Code, u.Name, u.UnitType, u.ParentId, null, u.DisplayOrder, u.IsActive))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<OrganizationUnitDto>> ListBranchesByDirectorateAsync(
+        Guid directorateId, CancellationToken cancellationToken = default) =>
+        await _db.OrganizationUnits.AsNoTracking()
+            .Where(u => !u.IsDeleted
+                        && u.IsActive
+                        && u.UnitType == OrganizationUnitType.Branch
+                        && u.ParentId == directorateId)
+            .OrderBy(u => u.DisplayOrder).ThenBy(u => u.Name)
+            .Select(u => new OrganizationUnitDto(u.Id, u.Code, u.Name, u.UnitType, u.ParentId, u.Parent != null ? u.Parent.Name : null, u.DisplayOrder, u.IsActive))
+            .ToListAsync(cancellationToken);
+
+    public async Task<ServiceResult> ValidateBranchBelongsToDirectorateAsync(
+        Guid branchId, Guid directorateId, CancellationToken cancellationToken = default)
+    {
+        var branch = await _db.OrganizationUnits.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == branchId && !u.IsDeleted, cancellationToken);
+        if (branch is null)
+            return ServiceResult.Fail("Hedef şube bulunamadı.", "NOT_FOUND");
+        if (branch.UnitType != OrganizationUnitType.Branch || !branch.IsActive)
+            return ServiceResult.Fail("Hedef şube seçilebilir değil.", "INVALID_TARGET");
+        if (branch.ParentId != directorateId)
+            return ServiceResult.Fail("Seçilen müdürlük bu daire başkanlığına bağlı değildir.", "INVALID_PARENT");
+        return ServiceResult.Ok();
+    }
 
     public async Task<OrganizationUnitDto?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {

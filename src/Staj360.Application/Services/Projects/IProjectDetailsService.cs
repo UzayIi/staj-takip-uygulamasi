@@ -7,7 +7,8 @@ public enum ProjectViewerKind
 {
     Admin = 0,
     Mentor = 1,
-    Intern = 2
+    Intern = 2,
+    Manager = 3
 }
 
 public class ProjectDetailsDto
@@ -34,6 +35,8 @@ public class ProjectDetailsDto
 
 public class ProjectTeamMemberDto
 {
+    public Guid AssignmentId { get; init; }
+    public Guid InternProfileId { get; init; }
     public string FullName { get; init; } = string.Empty;
     public string? RoleDescription { get; init; }
     public string? PeriodLabel { get; init; }

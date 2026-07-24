@@ -59,11 +59,39 @@ public class ProjectService : IProjectService
             .Where(p => p.MentorUserId == mentorUserId && !p.IsDeleted)
             .OrderByDescending(p => p.StartDate).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Project>> ListForManagerUnitsAsync(
+        IReadOnlyCollection<Guid> unitIds, CancellationToken cancellationToken = default)
+    {
+        if (unitIds.Count == 0)
+            return Array.Empty<Project>();
+
+        return await _db.Projects.AsNoTracking().Include(p => p.OrganizationUnit)
+            .Where(p => !p.IsDeleted && unitIds.Contains(p.OrganizationUnitId))
+            .OrderByDescending(p => p.StartDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Project?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         await _db.Projects.Include(p => p.OrganizationUnit)
             .Include(p => p.Assignments).ThenInclude(a => a.InternProfile)
             .Include(p => p.Tasks)
             .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+
+    public async Task<ServiceResult<Project>> GetForManagerAsync(
+        Guid managerId, IReadOnlyCollection<Guid> unitIds, Guid projectId, CancellationToken cancellationToken = default)
+    {
+        _ = managerId;
+        if (unitIds.Count == 0)
+            return ServiceResult<Project>.Fail("Yönetici birim ataması yok.", "FORBIDDEN");
+
+        var project = await GetAsync(projectId, cancellationToken);
+        if (project is null)
+            return ServiceResult<Project>.Fail("Proje bulunamadı.", "NOT_FOUND");
+        if (!unitIds.Contains(project.OrganizationUnitId))
+            return ServiceResult<Project>.Fail("Bu projeyi görüntüleme yetkiniz yok.", "FORBIDDEN");
+
+        return ServiceResult<Project>.Ok(project);
+    }
 
     public async Task<ServiceResult<Project>> CreateAsync(CreateProjectCommand command, CancellationToken cancellationToken = default)
     {
@@ -90,7 +118,19 @@ public class ProjectService : IProjectService
         return ServiceResult<Project>.Ok(entity);
     }
 
-    public async Task<ServiceResult> UpdateProgressAsync(Guid actingUserId, bool isAdmin, Guid projectId, int progressPercentage, ProjectStatus status, CancellationToken cancellationToken = default)
+    public Task<ServiceResult> UpdateProgressAsync(
+        Guid actingUserId, bool isAdmin, Guid projectId, int progressPercentage, ProjectStatus status, CancellationToken cancellationToken = default) =>
+        UpdateProgressAsync(actingUserId, isAdmin, isManager: false, managedUnitIds: null, projectId, progressPercentage, status, cancellationToken);
+
+    public async Task<ServiceResult> UpdateProgressAsync(
+        Guid actingUserId,
+        bool isAdmin,
+        bool isManager,
+        IReadOnlyCollection<Guid>? managedUnitIds,
+        Guid projectId,
+        int progressPercentage,
+        ProjectStatus status,
+        CancellationToken cancellationToken = default)
     {
         if (progressPercentage is < 0 or > 100)
             return ServiceResult.Fail("Tamamlanma oranı 0-100 arasında olmalıdır.", "VALIDATION");
@@ -99,27 +139,52 @@ public class ProjectService : IProjectService
         if (project is null)
             return ServiceResult.Fail("Proje bulunamadı.", "NOT_FOUND");
 
-        // Mentor yalnızca sorumlu olduğu projeyi yönetebilir.
-        if (!isAdmin && project.MentorUserId != actingUserId)
+        if (!CanManageProject(actingUserId, isAdmin, isManager, managedUnitIds, project))
             return ServiceResult.Fail("Bu projeyi yönetme yetkiniz yok.", "FORBIDDEN");
 
         project.ProgressPercentage = progressPercentage;
         project.Status = status;
         await _db.SaveChangesAsync(cancellationToken);
-        await _audit.LogAsync(nameof(Project), project.Id.ToString(), "UpdateProgress", cancellationToken: cancellationToken);
+        await _audit.LogAsync(nameof(Project), project.Id.ToString(), "UpdateProgress",
+            organizationUnitId: project.OrganizationUnitId, cancellationToken: cancellationToken);
         return ServiceResult.Ok();
     }
 
-    public async Task<ServiceResult> AssignInternAsync(Guid actingUserId, bool isAdmin, Guid projectId, Guid internProfileId, string? roleDescription, CancellationToken cancellationToken = default)
+    public Task<ServiceResult> AssignInternAsync(
+        Guid actingUserId, bool isAdmin, Guid projectId, Guid internProfileId, string? roleDescription, CancellationToken cancellationToken = default) =>
+        AssignInternAsync(actingUserId, isAdmin, isManager: false, managedUnitIds: null, projectId, internProfileId, roleDescription, cancellationToken);
+
+    public async Task<ServiceResult> AssignInternAsync(
+        Guid actingUserId,
+        bool isAdmin,
+        bool isManager,
+        IReadOnlyCollection<Guid>? managedUnitIds,
+        Guid projectId,
+        Guid internProfileId,
+        string? roleDescription,
+        CancellationToken cancellationToken = default)
     {
         var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted, cancellationToken);
         if (project is null)
             return ServiceResult.Fail("Proje bulunamadı.", "NOT_FOUND");
 
-        if (!isAdmin && project.MentorUserId != actingUserId)
+        if (!CanManageProject(actingUserId, isAdmin, isManager, managedUnitIds, project))
             return ServiceResult.Fail("Bu projeye atama yapma yetkiniz yok.", "FORBIDDEN");
 
-        // Aynı stajyer aynı projeye iki kez aktif atanamaz.
+        var intern = await _db.InternProfiles.AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == internProfileId && !i.IsDeleted, cancellationToken);
+        if (intern is null)
+            return ServiceResult.Fail("Stajyer bulunamadı.", "NOT_FOUND");
+
+        // Yönetici: stajyer projenin biriminde olmalı ve birim yönetici kapsamında olmalı.
+        if (isManager && !isAdmin)
+        {
+            if (intern.CurrentOrganizationUnitId != project.OrganizationUnitId)
+                return ServiceResult.Fail("Stajyer, projenin bulunduğu birimde olmalıdır.", "VALIDATION");
+            if (managedUnitIds is null || !managedUnitIds.Contains(project.OrganizationUnitId))
+                return ServiceResult.Fail("Bu birim yönetici kapsamınızda değil.", "FORBIDDEN");
+        }
+
         var alreadyActive = await _db.ProjectAssignments.AnyAsync(a =>
             a.ProjectId == projectId && a.InternProfileId == internProfileId && a.IsActive && !a.IsDeleted, cancellationToken);
         if (alreadyActive)
@@ -134,7 +199,45 @@ public class ProjectService : IProjectService
             IsActive = true
         });
         await _db.SaveChangesAsync(cancellationToken);
-        await _audit.LogAsync(nameof(ProjectAssignment), projectId.ToString(), "AssignIntern", cancellationToken: cancellationToken);
+        await _audit.LogAsync(nameof(ProjectAssignment), projectId.ToString(), "AssignIntern",
+            organizationUnitId: project.OrganizationUnitId, cancellationToken: cancellationToken);
+        return ServiceResult.Ok();
+    }
+
+    public async Task<ServiceResult> EndAssignmentAsync(
+        Guid actingUserId,
+        bool isAdmin,
+        bool isManager,
+        IReadOnlyCollection<Guid>? managedUnitIds,
+        Guid projectId,
+        Guid assignmentId,
+        DateOnly endDate,
+        CancellationToken cancellationToken = default)
+    {
+        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted, cancellationToken);
+        if (project is null)
+            return ServiceResult.Fail("Proje bulunamadı.", "NOT_FOUND");
+
+        if (!CanManageProject(actingUserId, isAdmin, isManager, managedUnitIds, project))
+            return ServiceResult.Fail("Bu atamayı sonlandırma yetkiniz yok.", "FORBIDDEN");
+
+        var assignment = await _db.ProjectAssignments
+            .FirstOrDefaultAsync(a => a.Id == assignmentId && a.ProjectId == projectId && !a.IsDeleted, cancellationToken);
+        if (assignment is null)
+            return ServiceResult.Fail("Atama bulunamadı.", "NOT_FOUND");
+        if (!assignment.IsActive)
+            return ServiceResult.Fail("Atama zaten sonlandırılmış.", "VALIDATION");
+
+        assignment.IsActive = false;
+        await _db.SaveChangesAsync(cancellationToken);
+        await _audit.LogAsync(
+            nameof(ProjectAssignment),
+            assignment.Id.ToString(),
+            "EndAssignment",
+            newValues: new { projectId, assignmentId, endDate },
+            organizationUnitId: project.OrganizationUnitId,
+            safeDescription: "Proje ataması sonlandırıldı.",
+            cancellationToken: cancellationToken);
         return ServiceResult.Ok();
     }
 
@@ -156,5 +259,21 @@ public class ProjectService : IProjectService
             .Where(p => projectIds.Contains(p.Id) && !p.IsDeleted)
             .OrderByDescending(p => p.StartDate)
             .ToListAsync(cancellationToken);
+    }
+
+    private static bool CanManageProject(
+        Guid actingUserId,
+        bool isAdmin,
+        bool isManager,
+        IReadOnlyCollection<Guid>? managedUnitIds,
+        Project project)
+    {
+        if (isAdmin)
+            return true;
+        if (project.MentorUserId == actingUserId)
+            return true;
+        if (isManager && managedUnitIds is not null && managedUnitIds.Contains(project.OrganizationUnitId))
+            return true;
+        return false;
     }
 }

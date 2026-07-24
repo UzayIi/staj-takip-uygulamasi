@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Staj360.Application.Abstractions;
 using Staj360.Application.Common;
+using Staj360.Application.Services.Assignments;
 using Staj360.Application.Services.Projects;
 using Staj360.Domain.Enums;
 
@@ -10,11 +11,13 @@ public class ProjectDetailsService : IProjectDetailsService
 {
     private readonly IApplicationDbContext _db;
     private readonly IUserDisplayLookup _users;
+    private readonly IUnitAssignmentService _assignments;
 
-    public ProjectDetailsService(IApplicationDbContext db, IUserDisplayLookup users)
+    public ProjectDetailsService(IApplicationDbContext db, IUserDisplayLookup users, IUnitAssignmentService assignments)
     {
         _db = db;
         _users = users;
+        _assignments = assignments;
     }
 
     public async Task<ServiceResult<ProjectDetailsDto>> GetDetailsAsync(
@@ -30,14 +33,26 @@ public class ProjectDetailsService : IProjectDetailsService
         if (project is null)
             return ServiceResult<ProjectDetailsDto>.Fail("Proje bulunamadı.", "NOT_FOUND");
 
-        // Görüntüleme: Admin, Mentor ve Intern — tüm mevcut projeler.
-        // Yönetme: Admin her zaman; Mentor yalnızca sorumlu olduğu projede.
-        var canManage = viewer switch
+        bool canManage;
+        switch (viewer)
         {
-            ProjectViewerKind.Admin => true,
-            ProjectViewerKind.Mentor => project.MentorUserId == actingUserId,
-            _ => false
-        };
+            case ProjectViewerKind.Admin:
+                canManage = true;
+                break;
+            case ProjectViewerKind.Mentor:
+                canManage = project.MentorUserId == actingUserId;
+                break;
+            case ProjectViewerKind.Manager:
+                var isManagerOfUnit = await _assignments.IsManagerOfUnitAsync(
+                    actingUserId, project.OrganizationUnitId, cancellationToken);
+                if (!isManagerOfUnit)
+                    return ServiceResult<ProjectDetailsDto>.Fail("Bu projeyi görüntüleme yetkiniz yok.", "FORBIDDEN");
+                canManage = true;
+                break;
+            default:
+                canManage = false;
+                break;
+        }
 
         var mentorMap = await _users.GetByIdsAsync(new[] { project.MentorUserId }, cancellationToken);
         mentorMap.TryGetValue(project.MentorUserId, out var mentorInfo);
@@ -46,7 +61,7 @@ public class ProjectDetailsService : IProjectDetailsService
             from a in _db.ProjectAssignments.AsNoTracking()
             join i in _db.InternProfiles.AsNoTracking() on a.InternProfileId equals i.Id
             where a.ProjectId == projectId && a.IsActive && !a.IsDeleted && !i.IsDeleted
-            select new { a.InternProfileId, i.UserId, a.RoleDescription }
+            select new { a.Id, a.InternProfileId, i.UserId, a.RoleDescription }
         ).ToListAsync(cancellationToken);
 
         var internUserIds = assignments.Select(a => a.UserId).Distinct().ToList();
@@ -67,6 +82,8 @@ public class ProjectDetailsService : IProjectDetailsService
             var period = periods.FirstOrDefault(p => p.InternProfileId == a.InternProfileId);
             return new ProjectTeamMemberDto
             {
+                AssignmentId = a.Id,
+                InternProfileId = a.InternProfileId,
                 FullName = u?.FullName ?? "—",
                 RoleDescription = a.RoleDescription,
                 PeriodLabel = period is null

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Staj360.Application.Abstractions;
 using Staj360.Infrastructure.Identity;
 using Staj360.Web.Areas.Identity.Models;
 
@@ -14,17 +15,20 @@ public class AccountController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<AccountController> _logger;
     private readonly IEmailSender _emailSender;
+    private readonly IAuditLogService _audit;
 
     public AccountController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         ILogger<AccountController> logger,
-        IEmailSender emailSender)
+        IEmailSender emailSender,
+        IAuditLogService audit)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _logger = logger;
         _emailSender = emailSender;
+        _audit = audit;
     }
 
     [AllowAnonymous]
@@ -49,32 +53,65 @@ public class AccountController : Controller
         var user = await _userManager.FindByEmailAsync(model.Email);
         if (user is null)
         {
-            // Kullanıcı numaralandırmasını önlemek için genel mesaj.
+            await _audit.LogAsync(
+                "Account", model.Email, "LoginFailed",
+                safeDescription: "Giriş başarısız: kullanıcı bulunamadı.",
+                isSuccessful: false,
+                failureReasonCode: "USER_NOT_FOUND",
+                actorNameSnapshot: model.Email);
             ModelState.AddModelError(string.Empty, "E-posta veya parola hatalı.");
             return View(model);
         }
 
         if (!user.IsActive)
         {
+            await _audit.LogAsync(
+                "Account", user.Id.ToString(), "LoginFailed",
+                safeDescription: "Giriş başarısız: hesap pasif.",
+                isSuccessful: false,
+                failureReasonCode: "INACTIVE",
+                actorUserId: user.Id,
+                actorNameSnapshot: user.FullName);
             ModelState.AddModelError(string.Empty, "Hesabınız pasif durumda. Lütfen yöneticinizle iletişime geçin.");
             return View(model);
         }
 
-        // lockoutOnFailure: art arda hatalı denemede geçici kilitleme.
         var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
             _logger.LogInformation("Kullanıcı giriş yaptı: {UserId}", user.Id);
+            var roles = await _userManager.GetRolesAsync(user);
+            await _audit.LogAsync(
+                "Account", user.Id.ToString(), "LoginSuccess",
+                safeDescription: "Kullanıcı giriş yaptı.",
+                isSuccessful: true,
+                actorUserId: user.Id,
+                actorNameSnapshot: user.FullName,
+                actorRoleSnapshot: roles.FirstOrDefault());
             return RedirectToLocal(returnUrl);
         }
 
         if (result.IsLockedOut)
         {
+            await _audit.LogAsync(
+                "Account", user.Id.ToString(), "LoginLockout",
+                safeDescription: "Hesap geçici olarak kilitlendi.",
+                isSuccessful: false,
+                failureReasonCode: "LOCKOUT",
+                actorUserId: user.Id,
+                actorNameSnapshot: user.FullName);
             ModelState.AddModelError(string.Empty, "Çok fazla hatalı deneme nedeniyle hesabınız geçici olarak kilitlendi. Lütfen daha sonra tekrar deneyin.");
             return View(model);
         }
 
+        await _audit.LogAsync(
+            "Account", user.Id.ToString(), "LoginFailed",
+            safeDescription: "Giriş başarısız: hatalı parola.",
+            isSuccessful: false,
+            failureReasonCode: "INVALID_PASSWORD",
+            actorUserId: user.Id,
+            actorNameSnapshot: user.FullName);
         ModelState.AddModelError(string.Empty, "E-posta veya parola hatalı.");
         return View(model);
     }
@@ -83,7 +120,17 @@ public class AccountController : Controller
     [HttpPost]
     public async Task<IActionResult> Logout()
     {
+        var userId = _userManager.GetUserId(User);
+        var user = userId is null ? null : await _userManager.FindByIdAsync(userId);
         await _signInManager.SignOutAsync();
+        await _audit.LogAsync(
+            "Account",
+            userId ?? "unknown",
+            "Logout",
+            safeDescription: "Kullanıcı çıkış yaptı.",
+            isSuccessful: true,
+            actorUserId: user?.Id,
+            actorNameSnapshot: user?.FullName);
         return RedirectToAction(nameof(Login));
     }
 
@@ -109,9 +156,17 @@ public class AccountController : Controller
         if (ModelState.IsValid)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
+            await _audit.LogAsync(
+                "Account",
+                user?.Id.ToString() ?? model.Email,
+                "ForgotPasswordRequest",
+                safeDescription: "Parola sıfırlama talebi alındı.",
+                isSuccessful: true,
+                actorUserId: user?.Id,
+                actorNameSnapshot: user?.FullName ?? model.Email);
+
             if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
             {
-                // Bilgi sızıntısını önlemek için kullanıcı bulunamasa bile onay sayfasına yönlendir.
                 return RedirectToAction(nameof(ForgotPasswordConfirmation));
             }
 
@@ -191,7 +246,6 @@ public class AccountController : Controller
 
     private IActionResult RedirectToLocal(string? returnUrl)
     {
-        // Açık yönlendirme (open redirect) güvenlik açığını önle.
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
         return RedirectToAction("Index", "Home", new { area = "" });

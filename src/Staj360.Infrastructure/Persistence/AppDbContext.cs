@@ -46,6 +46,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<StaffMessage> StaffMessages => Set<StaffMessage>();
     public DbSet<AiReportSummary> AiReportSummaries => Set<AiReportSummary>();
 
     protected override void OnModelCreating(ModelBuilder builder)

@@ -23,8 +23,8 @@ public static class DemoDataSeeder
 
     public static readonly string[] DemoStudentNumbers =
     [
-        "DEMO-2001", "DEMO-2002", "DEMO-2003", "DEMO-2004", "DEMO-2005", "DEMO-2006",
-        "DEMO-2007", "DEMO-2008", "DEMO-2009", "DEMO-2010", "DEMO-2011", "DEMO-2012"
+        "STJ-2026-2001", "STJ-2026-2002", "STJ-2026-2003", "STJ-2026-2004", "STJ-2026-2005", "STJ-2026-2006",
+        "STJ-2026-2007", "STJ-2026-2008", "STJ-2026-2009", "STJ-2026-2010", "STJ-2026-2011", "STJ-2026-2012"
     ];
 
     /// <summary>Parola senkronunda dokunulacak kanonik demo hesaplar.</summary>
@@ -73,6 +73,9 @@ public static class DemoDataSeeder
             "Demo giriş hesapları hazır ({Count} hesap). E-postalar: {Emails}",
             ensure.UserIdsByEmail.Count,
             string.Join(", ", ensure.UserIdsByEmail.Keys.OrderBy(x => x)));
+
+        await CbsUsersSeeder.SeedAsync(services, cancellationToken);
+        await SeedDisplaySanitizer.SanitizeAsync(db, logger, cancellationToken);
     }
 
     /// <summary>
@@ -162,11 +165,17 @@ public static class DemoDataSeeder
 
     private static async Task<WorkSchedule> EnsureWorkScheduleAsync(AppDbContext db, SeedStats stats, CancellationToken ct)
     {
-        const string name = "Demo Standart Mesai (09:00-18:00)";
+        const string name = "Standart Mesai (09:00-18:00)";
+        const string legacyName = "Demo Standart Mesai (09:00-18:00)";
         var existing = await db.WorkSchedules.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(s => s.Name == name && !s.IsDeleted, ct);
+            .FirstOrDefaultAsync(s => (s.Name == name || s.Name == legacyName) && !s.IsDeleted, ct);
         if (existing is not null)
         {
+            if (existing.Name != name)
+            {
+                existing.Name = name;
+                await db.SaveChangesAsync(ct);
+            }
             stats.Skipped++;
             return existing;
         }
@@ -191,8 +200,8 @@ public static class DemoDataSeeder
         var list = new List<ApplicationUser>();
         var defs = new[]
         {
-            (MarkerEmail, "Demo Süper Admin", AppRoles.SuperAdmin),
-            ("admin.yonetim@stajamed.local", "Demo Yönetici", AppRoles.Admin)
+            (MarkerEmail, "Süper Yönetici", AppRoles.SuperAdmin),
+            ("admin.yonetim@stajamed.local", "Kurumsal Yönetici", AppRoles.Admin)
         };
         foreach (var (email, name, role) in defs)
         {
@@ -267,18 +276,18 @@ public static class DemoDataSeeder
         var today = tz.LocalDate(clock.UtcNow);
         var specs = new[]
         {
-            new InternSpec("Ayşe Yılmaz", "stajyer.ayse@stajamed.local", "DEMO-2001", "0555 200 1001", "Fırat Üniversitesi", "Yazılım Mühendisliği", "3", "Yazılım Geliştirme", 0, "Demo Mah. No:1 Elazığ", false),
-            new InternSpec("Emir Arslan", "stajyer.emir@stajamed.local", "DEMO-2002", "0555 200 1002", "Dicle Üniversitesi", "Bilgisayar Mühendisliği", "4", "Bilgi İşlem", 1, "Demo Cad. No:2 Diyarbakır", false),
-            new InternSpec("Zeynep Kaya", "stajyer.zeynep@stajamed.local", "DEMO-2003", "0555 200 1003", "İnönü Üniversitesi", "Yapay Zekâ Mühendisliği", "3", "Yapay Zekâ ve Veri Analitiği", 2, "Demo Sok. No:3 Malatya", false),
-            new InternSpec("Can Aydın", "stajyer.can@stajamed.local", "DEMO-2004", "0555 200 1004", "Hacettepe Üniversitesi", "Yönetim Bilişim Sistemleri", "2", "İnsan Kaynakları", 3, "Demo Bulvar No:4 Ankara", false),
-            new InternSpec("Elif Şahin", "stajyer.elif@stajamed.local", "DEMO-2005", "0555 200 1005", "ODTÜ", "Endüstri Mühendisliği", "3", "Mali Hizmetler", 0, "Demo Park No:5 Ankara", false),
-            new InternSpec("Burak Tekin", "stajyer.burak@stajamed.local", "DEMO-2006", "0555 200 1006", "Gazi Üniversitesi", "Bilgisayar Mühendisliği", "4", "Yazılım Geliştirme", 1, "Demo Sit. No:6 Ankara", false),
-            new InternSpec("Ceren Yılmaz", "stajyer.ceren@stajamed.local", "DEMO-2007", "0555 200 1007", "İTÜ", "Yazılım Mühendisliği", "3", "Yapay Zekâ ve Veri Analitiği", 2, "Demo Mah. No:7 İstanbul", false),
-            new InternSpec("Deniz Çelik", "stajyer.deniz@stajamed.local", "DEMO-2008", "0555 200 1008", "Boğaziçi Üniversitesi", "Elektrik-Elektronik", "2", "Bilgi İşlem", 3, "Demo Cad. No:8 İstanbul", false),
-            new InternSpec("Eren Korkmaz", "stajyer.eren@stajamed.local", "DEMO-2009", "0555 200 1009", "Yıldız Teknik Üniversitesi", "Makine Mühendisliği", "4", "Basın ve Halkla İlişkiler", 0, "Demo Sok. No:9 İstanbul", false),
-            new InternSpec("Fatma Öztürk", "stajyer.fatma@stajamed.local", "DEMO-2010", "0555 200 1010", "Ankara Üniversitesi", "İletişim", "3", "Basın ve Halkla İlişkiler", 1, "Demo Yol No:10 Ankara", false),
-            new InternSpec("Gökhan Polat", "stajyer.gokhan@stajamed.local", "DEMO-2011", "0555 200 1011", "Ege Üniversitesi", "İstatistik", "3", "Yapay Zekâ ve Veri Analitiği", 2, "Demo Liman No:11 İzmir", false),
-            new InternSpec("Hale Nur", "stajyer.hale@stajamed.local", "DEMO-2012", "0555 200 1012", "Selçuk Üniversitesi", "İşletme", "2", "İnsan Kaynakları", 3, "Demo Mevlana No:12 Konya", true)
+            new InternSpec("Ayşe Yılmaz", "stajyer.ayse@stajamed.local", "STJ-2026-2001", "0555 200 1001", "Fırat Üniversitesi", "Yazılım Mühendisliği", "3", "Yazılım Geliştirme", 0, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Emir Arslan", "stajyer.emir@stajamed.local", "STJ-2026-2002", "0555 200 1002", "Dicle Üniversitesi", "Bilgisayar Mühendisliği", "4", "Bilgi İşlem", 1, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Zeynep Kaya", "stajyer.zeynep@stajamed.local", "STJ-2026-2003", "0555 200 1003", "İnönü Üniversitesi", "Yapay Zekâ Mühendisliği", "3", "Yapay Zekâ ve Veri Analitiği", 2, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Can Aydın", "stajyer.can@stajamed.local", "STJ-2026-2004", "0555 200 1004", "Hacettepe Üniversitesi", "Yönetim Bilişim Sistemleri", "2", "İnsan Kaynakları", 3, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Elif Şahin", "stajyer.elif@stajamed.local", "STJ-2026-2005", "0555 200 1005", "ODTÜ", "Endüstri Mühendisliği", "3", "Mali Hizmetler", 0, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Burak Tekin", "stajyer.burak@stajamed.local", "STJ-2026-2006", "0555 200 1006", "Gazi Üniversitesi", "Bilgisayar Mühendisliği", "4", "Yazılım Geliştirme", 1, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Ceren Yılmaz", "stajyer.ceren@stajamed.local", "STJ-2026-2007", "0555 200 1007", "İTÜ", "Yazılım Mühendisliği", "3", "Yapay Zekâ ve Veri Analitiği", 2, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Deniz Çelik", "stajyer.deniz@stajamed.local", "STJ-2026-2008", "0555 200 1008", "Boğaziçi Üniversitesi", "Elektrik-Elektronik", "2", "Bilgi İşlem", 3, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Eren Korkmaz", "stajyer.eren@stajamed.local", "STJ-2026-2009", "0555 200 1009", "Yıldız Teknik Üniversitesi", "Makine Mühendisliği", "4", "Basın ve Halkla İlişkiler", 0, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Fatma Öztürk", "stajyer.fatma@stajamed.local", "STJ-2026-2010", "0555 200 1010", "Ankara Üniversitesi", "İletişim", "3", "Basın ve Halkla İlişkiler", 1, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Gökhan Polat", "stajyer.gokhan@stajamed.local", "STJ-2026-2011", "0555 200 1011", "Ege Üniversitesi", "İstatistik", "3", "Yapay Zekâ ve Veri Analitiği", 2, "Diyarbakır/Yenişehir — Sentetik test adresi", false),
+            new InternSpec("Hale Nur", "stajyer.hale@stajamed.local", "STJ-2026-2012", "0555 200 1012", "Selçuk Üniversitesi", "İşletme", "2", "İnsan Kaynakları", 3, "Diyarbakır/Yenişehir — Sentetik test adresi", true)
         };
 
         var bundles = new List<InternBundle>();
@@ -302,13 +311,13 @@ public static class DemoDataSeeder
                     StudentNumber = spec.StudentNumber,
                     University = spec.University,
                     SchoolDepartment = spec.SchoolDepartment,
-                    Faculty = "Demo Fakülte",
+                    Faculty = "Mühendislik Fakültesi",
                     ClassLevel = spec.ClassLevel,
                     PhoneNumber = spec.Phone,
                     Address = spec.Address,
                     CurrentOrganizationUnitId = unitId,
                     IsActive = true,
-                    EmergencyContactName = "Demo Acil Kişi",
+                    EmergencyContactName = "Sentetik Acil Kişi",
                     EmergencyContactPhone = "0555 000 0000"
                 };
                 db.InternProfiles.Add(profile);
@@ -344,24 +353,24 @@ public static class DemoDataSeeder
                 periods.Add(primaryPeriod);
 
                 // Bazı stajyerlere geçmiş dönem (2024/2025)
-                if (spec.StudentNumber is "DEMO-2001" or "DEMO-2003" or "DEMO-2005" or "DEMO-2007")
+                if (spec.StudentNumber is "STJ-2026-2001" or "STJ-2026-2003" or "STJ-2026-2005" or "STJ-2026-2007")
                 {
                     var past = await EnsurePeriodAsync(db, profile.Id, mentor.Id, schedule.Id,
                         new DateOnly(2025, 6, 2), new DateOnly(2025, 8, 29), InternshipStatus.Completed, 40, 40, stats, ct);
                     periods.Add(past);
                 }
-                if (spec.StudentNumber is "DEMO-2002" or "DEMO-2006")
+                if (spec.StudentNumber is "STJ-2026-2002" or "STJ-2026-2006")
                 {
                     var past = await EnsurePeriodAsync(db, profile.Id, mentor.Id, schedule.Id,
                         new DateOnly(2024, 7, 1), new DateOnly(2024, 9, 13), InternshipStatus.Completed, 35, 35, stats, ct);
                     periods.Add(past);
                 }
-                if (spec.StudentNumber == "DEMO-2004")
+                if (spec.StudentNumber == "STJ-2026-2004")
                 {
                     periods.Add(await EnsurePeriodAsync(db, profile.Id, mentor.Id, schedule.Id,
                         new DateOnly(2026, 9, 1), new DateOnly(2026, 11, 28), InternshipStatus.Pending, 30, 0, stats, ct));
                 }
-                if (spec.StudentNumber == "DEMO-2008")
+                if (spec.StudentNumber == "STJ-2026-2008")
                 {
                     periods.Add(await EnsurePeriodAsync(db, profile.Id, mentor.Id, schedule.Id,
                         new DateOnly(2025, 2, 3), new DateOnly(2025, 3, 14), InternshipStatus.Terminated, 20, 5, stats, ct));
@@ -469,8 +478,8 @@ public static class DemoDataSeeder
         // Atamalar: birden fazla stajyer bazı projelere
         for (var i = 0; i < Math.Min(projects.Count, withPeriod.Count); i++)
         {
-            await EnsureAssignmentAsync(db, projects[i].Id, withPeriod[i].Profile.Id, "Demo geliştirici", stats, ct);
-            await EnsureAssignmentAsync(db, projects[i].Id, withPeriod[(i + 3) % withPeriod.Count].Profile.Id, "Demo destek", stats, ct);
+            await EnsureAssignmentAsync(db, projects[i].Id, withPeriod[i].Profile.Id, "Geliştirici", stats, ct);
+            await EnsureAssignmentAsync(db, projects[i].Id, withPeriod[(i + 3) % withPeriod.Count].Profile.Id, "Destek", stats, ct);
         }
 
         var taskTitles = new[]
@@ -499,7 +508,7 @@ public static class DemoDataSeeder
                     _ => ProjectTaskStatus.InReview
                 };
             var due = DateOnly.FromDateTime(clock.UtcNow.Date).AddDays(overdue ? -(3 + t % 5) : 7 + (t % 10));
-            await EnsureTaskAsync(db, project.Id, intern.Id, $"Demo: {taskTitles[t]}", status,
+            await EnsureTaskAsync(db, project.Id, intern.Id, taskTitles[t], status,
                 (TaskPriority)(t % 4), due, stats, ct);
         }
     }
@@ -556,8 +565,9 @@ public static class DemoDataSeeder
         AppDbContext db, Guid projectId, Guid? internId, string title, ProjectTaskStatus status,
         TaskPriority priority, DateOnly due, SeedStats stats, CancellationToken ct)
     {
+        var legacyTitles = new[] { title, $"Demo: {title}", $"Kurumsal: {title}" };
         if (await db.ProjectTasks.IgnoreQueryFilters()
-                .AnyAsync(t => t.ProjectId == projectId && t.Title == title && !t.IsDeleted, ct))
+                .AnyAsync(t => t.ProjectId == projectId && legacyTitles.Contains(t.Title) && !t.IsDeleted, ct))
         {
             stats.TasksSkipped++;
             return;
@@ -568,7 +578,7 @@ public static class DemoDataSeeder
             ProjectId = projectId,
             AssignedInternProfileId = internId,
             Title = title,
-            Description = $"Sentetik demo görev: {title}",
+            Description = $"Sentetik görev: {title}",
             Priority = priority,
             Status = status,
             DueDate = due,
@@ -677,7 +687,7 @@ public static class DemoDataSeeder
                 EventType = AttendanceEventType.CheckIn,
                 EventTimeUtc = checkInUtc.Value,
                 Source = AttendanceSource.WebButton,
-                Notes = "Demo giriş"
+                Notes = "Giriş kaydı"
             });
 
             if (!incomplete)
@@ -692,7 +702,7 @@ public static class DemoDataSeeder
                     EventType = AttendanceEventType.CheckOut,
                     EventTimeUtc = checkOutUtc.Value,
                     Source = AttendanceSource.WebButton,
-                    Notes = "Demo çıkış"
+                    Notes = "Çıkış kaydı"
                 });
             }
         }
@@ -766,9 +776,9 @@ public static class DemoDataSeeder
             InternshipPeriodId = periodId,
             ReportDate = date,
             GeneralNotes = notes,
-            ProblemsEncountered = status == DailyReportStatus.RevisionRequested ? "Demo: eksik örnek veri." : null,
-            SolutionsApplied = status == DailyReportStatus.Approved ? "Demo: çözüm uygulandı." : null,
-            TomorrowPlan = "Demo: bir sonraki iş kalemi planlandı.",
+            ProblemsEncountered = status == DailyReportStatus.RevisionRequested ? "Eksik örnek veri nedeniyle revizyon istendi." : null,
+            SolutionsApplied = status == DailyReportStatus.Approved ? "Belirlenen teknik çözüm uygulandı." : null,
+            TomorrowPlan = "Bir sonraki iş kalemi planlandı.",
             Status = status,
             SubmittedAtUtc = status == DailyReportStatus.Draft ? null : DateTime.UtcNow.AddDays(-1),
             ReviewedAtUtc = status is DailyReportStatus.Approved or DailyReportStatus.Rejected or DailyReportStatus.RevisionRequested
@@ -777,9 +787,9 @@ public static class DemoDataSeeder
                 ? mentorId : null,
             MentorComment = status switch
             {
-                DailyReportStatus.Approved => "Demo onay: düzenli rapor.",
-                DailyReportStatus.Rejected => "Demo red: içerik yetersiz.",
-                DailyReportStatus.RevisionRequested => "Demo: lütfen örnekleri genişletin.",
+                DailyReportStatus.Approved => "Onay: düzenli ve yeterli rapor.",
+                DailyReportStatus.Rejected => "Red: içerik yetersiz.",
+                DailyReportStatus.RevisionRequested => "Lütfen örnekleri genişletin.",
                 _ => null
             },
             WorkItems =
@@ -790,7 +800,7 @@ public static class DemoDataSeeder
                     Description = notes,
                     DurationMinutes = 90 + (date.Day % 4) * 30,
                     TechnologiesUsed = tech,
-                    Result = "Demo tamamlandı"
+                    Result = "Tamamlandı"
                 }
             }
         };
@@ -807,18 +817,18 @@ public static class DemoDataSeeder
         var today = DateOnly.FromDateTime(clock.UtcNow);
         var defs = new (int InternIdx, LeaveType Type, LeaveRequestStatus Status, string Reason, int StartOffset, int Days)[]
         {
-            (0, LeaveType.Excuse, LeaveRequestStatus.Pending, "Demo mazeret: ailevi iş.", 3, 0),
-            (1, LeaveType.Sick, LeaveRequestStatus.Approved, "Demo sağlık: sentetik rapor.", -8, 1),
-            (2, LeaveType.Administrative, LeaveRequestStatus.Rejected, "Demo idari: uygun görülmedi.", 5, 0),
-            (3, LeaveType.Other, LeaveRequestStatus.Cancelled, "Demo diğer: talep iptal.", 2, 0),
-            (4, LeaveType.Excuse, LeaveRequestStatus.Approved, "Demo mazeret onaylı.", -15, 0),
-            (5, LeaveType.Sick, LeaveRequestStatus.Pending, "Demo sağlık bekleyen.", 7, 2),
-            (0, LeaveType.Administrative, LeaveRequestStatus.Approved, "Demo idari onay.", -20, 1),
-            (1, LeaveType.Excuse, LeaveRequestStatus.Rejected, "Demo mazeret red.", -3, 0),
-            (2, LeaveType.Other, LeaveRequestStatus.Pending, "Demo diğer bekleyen.", 10, 0),
-            (3, LeaveType.Sick, LeaveRequestStatus.Cancelled, "Demo sağlık iptal.", 4, 1),
-            (6, LeaveType.Excuse, LeaveRequestStatus.Approved, "Demo yarım gün.", -12, 0),
-            (7, LeaveType.Administrative, LeaveRequestStatus.Pending, "Demo idari bekleyen.", 14, 2)
+            (0, LeaveType.Excuse, LeaveRequestStatus.Pending, "Mazeret: ailevi iş.", 3, 0),
+            (1, LeaveType.Sick, LeaveRequestStatus.Approved, "Sağlık: sentetik rapor.", -8, 1),
+            (2, LeaveType.Administrative, LeaveRequestStatus.Rejected, "İdari izin: uygun görülmedi.", 5, 0),
+            (3, LeaveType.Other, LeaveRequestStatus.Cancelled, "Diğer: talep iptal edildi.", 2, 0),
+            (4, LeaveType.Excuse, LeaveRequestStatus.Approved, "Mazeret onaylı izin talebi.", -15, 0),
+            (5, LeaveType.Sick, LeaveRequestStatus.Pending, "Sağlık izni bekleyen talep.", 7, 2),
+            (0, LeaveType.Administrative, LeaveRequestStatus.Approved, "İdari izin onaylandı.", -20, 1),
+            (1, LeaveType.Excuse, LeaveRequestStatus.Rejected, "Mazeret talebi reddedildi.", -3, 0),
+            (2, LeaveType.Other, LeaveRequestStatus.Pending, "Diğer izin talebi bekliyor.", 10, 0),
+            (3, LeaveType.Sick, LeaveRequestStatus.Cancelled, "Sağlık izni iptal edildi.", 4, 1),
+            (6, LeaveType.Excuse, LeaveRequestStatus.Approved, "Yarım gün mazeret izni.", -12, 0),
+            (7, LeaveType.Administrative, LeaveRequestStatus.Pending, "İdari izin bekleyen talep.", 14, 2)
         };
 
         foreach (var def in defs)
@@ -828,7 +838,10 @@ public static class DemoDataSeeder
             var start = today.AddDays(def.StartOffset);
             var end = start.AddDays(def.Days);
             if (await db.LeaveRequests.IgnoreQueryFilters()
-                    .AnyAsync(l => l.InternshipPeriodId == periodId && l.Reason == def.Reason && !l.IsDeleted, ct))
+                    .AnyAsync(l => l.InternshipPeriodId == periodId
+                                   && l.LeaveType == def.Type
+                                   && l.StartDate == start
+                                   && !l.IsDeleted, ct))
             {
                 stats.LeavesSkipped++;
                 continue;
@@ -849,8 +862,8 @@ public static class DemoDataSeeder
                     ? mentors[def.InternIdx % mentors.Count].Id : null,
                 ReviewerNote = def.Status switch
                 {
-                    LeaveRequestStatus.Approved => "Demo: onaylandı.",
-                    LeaveRequestStatus.Rejected => "Demo: reddedildi.",
+                    LeaveRequestStatus.Approved => "İzin talebi onaylandı.",
+                    LeaveRequestStatus.Rejected => "İzin talebi reddedildi.",
                     _ => null
                 }
             });
@@ -886,7 +899,7 @@ public static class DemoDataSeeder
                     ProblemSolvingScore = 3,
                     TimeManagementScore = 4,
                     AttendanceScore = 5,
-                    GeneralComment = "Demo değerlendirme: sentetik dönem sonu yorumu."
+                    GeneralComment = "Dönem sonu değerlendirme: sentetik yorum."
                 });
                 stats.EvaluationsCreated++;
             }
@@ -899,22 +912,23 @@ public static class DemoDataSeeder
         var now = clock.UtcNow;
         var defs = new (string Title, string Content, int PubDays, int? ExpDays, bool Active)[]
         {
-            ("Demo: Genel oryantasyon", "Tüm stajyerler için genel oryantasyon duyurusu (demo).", -2, 14, true),
-            ("Demo: Yazılım birimi toplantısı", "Yazılım Geliştirme birimine özel toplantı (demo).", -1, 7, true),
-            ("Demo: Stajyer rapor hatırlatması", "Stajyerlere günlük rapor hatırlatması (demo).", 0, 10, true),
-            ("Demo: Süresi dolmuş duyuru", "Bu duyurunun süresi dolmuştur (demo).", -30, -5, false),
-            ("Demo: İK bilgilendirme", "İnsan Kaynakları süreç bilgilendirmesi (demo).", -3, 20, true),
-            ("Demo: Mali dönem kapanışı", "Mali Hizmetler dönem kapanış notu (demo).", -4, 5, true),
-            ("Demo: Basın etkinliği", "Basın ve Halkla İlişkiler etkinlik duyurusu (demo).", -1, 12, true),
-            ("Demo: AI workshop", "Yapay zekâ workshop duyurusu (demo).", -6, 3, true),
-            ("Demo: Pasif arşiv notu", "Pasif birim için arşiv notu (demo).", -10, null, false),
-            ("Demo: Güvenlik bilgilendirmesi", "Bilgi İşlem güvenlik uyarısı (demo).", -2, 30, true)
+            ("Genel oryantasyon duyurusu", "Tüm stajyerler için genel oryantasyon duyurusu.", -2, 14, true),
+            ("Yazılım birimi toplantısı", "Yazılım Geliştirme birimine özel toplantı duyurusu.", -1, 7, true),
+            ("Stajyer rapor hatırlatması", "Stajyerlere günlük rapor hatırlatması.", 0, 10, true),
+            ("Süresi dolmuş duyuru", "Bu duyurunun yayın süresi dolmuştur.", -30, -5, false),
+            ("İK bilgilendirme", "İnsan Kaynakları süreç bilgilendirmesi.", -3, 20, true),
+            ("Mali dönem kapanışı", "Mali Hizmetler dönem kapanış notu.", -4, 5, true),
+            ("Basın etkinliği duyurusu", "Basın ve Halkla İlişkiler etkinlik duyurusu.", -1, 12, true),
+            ("Yapay zekâ workshop duyurusu", "Yapay zekâ workshop duyurusu.", -6, 3, true),
+            ("Arşiv bilgilendirme notu", "Arşiv birimi için bilgilendirme notu.", -10, null, false),
+            ("Güvenlik bilgilendirmesi", "Bilgi İşlem güvenlik uyarısı.", -2, 30, true)
         };
 
         foreach (var def in defs)
         {
+            var legacyTitles = AnnouncementLegacyTitles(def.Title);
             if (await db.Announcements.IgnoreQueryFilters()
-                    .AnyAsync(a => a.Title == def.Title && !a.IsDeleted, ct))
+                    .AnyAsync(a => !a.IsDeleted && (a.Title == def.Title || legacyTitles.Contains(a.Title)), ct))
             {
                 stats.AnnouncementsSkipped++;
                 continue;
@@ -934,6 +948,21 @@ public static class DemoDataSeeder
         await db.SaveChangesAsync(ct);
     }
 
+    private static string[] AnnouncementLegacyTitles(string title) => title switch
+    {
+        "Genel oryantasyon duyurusu" => ["Demo: Genel oryantasyon", "Kurumsal: Genel oryantasyon"],
+        "Yazılım birimi toplantısı" => ["Demo: Yazılım birimi toplantısı", "Kurumsal: Yazılım birimi toplantısı"],
+        "Stajyer rapor hatırlatması" => ["Demo: Stajyer rapor hatırlatması", "Kurumsal: Stajyer rapor hatırlatması"],
+        "Süresi dolmuş duyuru" => ["Demo: Süresi dolmuş duyuru", "Kurumsal: Süresi dolmuş duyuru"],
+        "İK bilgilendirme" => ["Demo: İK bilgilendirme", "Kurumsal: İK bilgilendirme"],
+        "Mali dönem kapanışı" => ["Demo: Mali dönem kapanışı", "Kurumsal: Mali dönem kapanışı"],
+        "Basın etkinliği duyurusu" => ["Demo: Basın etkinliği", "Kurumsal: Basın etkinliği"],
+        "Yapay zekâ workshop duyurusu" => ["Demo: AI workshop", "Kurumsal: AI workshop"],
+        "Arşiv bilgilendirme notu" => ["Demo: Pasif arşiv notu", "Kurumsal: Pasif arşiv notu"],
+        "Güvenlik bilgilendirmesi" => ["Demo: Güvenlik bilgilendirmesi", "Kurumsal: Güvenlik bilgilendirmesi"],
+        _ => []
+    };
+
     private static async Task SeedAiSummariesAsync(
         AppDbContext db, IClock clock, List<InternBundle> interns,
         SeedStats stats, CancellationToken ct)
@@ -943,15 +972,15 @@ public static class DemoDataSeeder
         {
             var period = bundle.PrimaryPeriod!;
             await EnsureAiSummaryAsync(db, clock, period, bundle.Mentor.Id,
-                $"demo-ai-weekly-{period.Id:N}", AiSummaryType.Weekly,
+                $"synth-ai-weekly-{period.Id:N}", AiSummaryType.Weekly,
                 period.StartDate, period.StartDate.AddDays(14),
-                "Demo haftalık özet: düzenli ilerleme ve tutarlı raporlama.",
+                "Haftalık özet: düzenli ilerleme ve tutarlı raporlama.",
                 "Form doğrulama, dashboard veri hazırlığı, dokümantasyon.",
                 stats, ct);
             await EnsureAiSummaryAsync(db, clock, period, bundle.Mentor.Id,
-                $"demo-ai-monthly-{period.Id:N}", AiSummaryType.Monthly,
+                $"synth-ai-monthly-{period.Id:N}", AiSummaryType.Monthly,
                 period.StartDate, period.StartDate.AddDays(30),
-                "Demo aylık özet: teknik yetkinlik arttı; ekip içi iletişim güçlendirilebilir.",
+                "Aylık özet: teknik yetkinlik arttı; ekip içi iletişim güçlendirilebilir.",
                 "Yetkilendirme testleri, Excel export, devam kaydı senaryoları.",
                 stats, ct);
         }
@@ -963,8 +992,11 @@ public static class DemoDataSeeder
         AiSummaryType type, DateOnly start, DateOnly end, string executive, string completedWork,
         SeedStats stats, CancellationToken ct)
     {
+        var legacyHash = hash.Replace("synth-ai-", "demo-ai-", StringComparison.Ordinal);
         if (await db.AiReportSummaries.IgnoreQueryFilters()
-                .AnyAsync(s => s.InternshipPeriodId == period.Id && s.InputHash == hash && !s.IsDeleted, ct))
+                .AnyAsync(s => s.InternshipPeriodId == period.Id
+                               && (s.InputHash == hash || s.InputHash == legacyHash)
+                               && !s.IsDeleted, ct))
         {
             stats.AiSummariesSkipped++;
             return;
@@ -981,12 +1013,12 @@ public static class DemoDataSeeder
             CompletedWork = completedWork,
             Technologies = "C#, ASP.NET Core, EF Core, Bootstrap",
             ProblemsAndSolutions = "CORS gecikmesi yaşandı; ortam değişkenleri ayrıştırılarak çözüldü.",
-            RisksOrBlockers = "Demo: harici API anahtarı yoksa AI canlı çağrı yapılmaz.",
+            RisksOrBlockers = "Harici API anahtarı yoksa canlı AI çağrısı yapılmaz.",
             SuggestedNextSteps = "Test kapsamını artırın; filtre ve dışa aktarma senaryolarını doğrulayın.",
             SourceReportIds = "[]",
             InputHash = hash,
-            ModelName = "demo-synthetic",
-            PromptVersion = "demo-v1",
+            ModelName = "synthetic-seed",
+            PromptVersion = "seed-v1",
             Status = AiSummaryStatus.Completed,
             GeneratedAtUtc = clock.UtcNow.AddDays(-1)
         });
@@ -1000,24 +1032,28 @@ public static class DemoDataSeeder
         var defs = new List<(Guid UserId, string Title, string Message, NotificationType Type, bool Read)>();
         if (admins.Count > 0)
         {
-            defs.Add((admins[0].Id, "Demo: Yeni birim oluşturuldu", "Sentetik demo birim kaydı eklendi.", NotificationType.Info, false));
-            defs.Add((admins[0].Id, "Demo: Proje güncellendi", "Demo proje ilerleme oranı güncellendi.", NotificationType.Success, true));
+            defs.Add((admins[0].Id, "Yeni birim oluşturuldu", "Sentetik birim kaydı eklendi.", NotificationType.Info, false));
+            defs.Add((admins[0].Id, "Proje güncellendi", "Proje ilerleme oranı güncellendi.", NotificationType.Success, true));
         }
         foreach (var m in mentors.Take(2))
         {
-            defs.Add((m.Id, "Demo: Günlük rapor onaylandı", "Atanan stajyerin raporu onaylandı (demo).", NotificationType.Success, false));
-            defs.Add((m.Id, "Demo: İzin talebi sonuçlandı", "Bir izin talebi sonuçlandırıldı (demo).", NotificationType.Warning, true));
+            defs.Add((m.Id, "Günlük rapor onaylandı", "Atanan stajyerin raporu onaylandı.", NotificationType.Success, false));
+            defs.Add((m.Id, "İzin talebi sonuçlandı", "Bir izin talebi sonuçlandırıldı.", NotificationType.Warning, true));
         }
         foreach (var i in interns.Take(4))
         {
-            defs.Add((i.User.Id, "Demo: Yeni proje atandı", "Size demo bir proje atandı.", NotificationType.Info, false));
-            defs.Add((i.User.Id, "Demo: Yeni duyuru yayınlandı", "Yeni bir duyuru yayınlandı.", NotificationType.Info, true));
+            defs.Add((i.User.Id, "Yeni proje atandı", "Size bir proje atandı.", NotificationType.Info, false));
+            defs.Add((i.User.Id, "Yeni duyuru yayınlandı", "Yeni bir duyuru yayınlandı.", NotificationType.Info, true));
         }
 
         foreach (var def in defs)
         {
+            var legacyTitle = "Demo: " + def.Title;
+            var kurumsalTitle = "Kurumsal: " + def.Title;
             if (await db.Notifications.IgnoreQueryFilters()
-                    .AnyAsync(n => n.UserId == def.UserId && n.Title == def.Title && !n.IsDeleted, ct))
+                    .AnyAsync(n => n.UserId == def.UserId
+                                   && (n.Title == def.Title || n.Title == legacyTitle || n.Title == kurumsalTitle)
+                                   && !n.IsDeleted, ct))
             {
                 stats.NotificationsSkipped++;
                 continue;

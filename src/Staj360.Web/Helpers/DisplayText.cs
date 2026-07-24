@@ -82,6 +82,15 @@ public static class DisplayText
         _ => t.ToString()
     };
 
+    public static string Of(TransferRequestStatus s) => s switch
+    {
+        TransferRequestStatus.Pending => "Beklemede",
+        TransferRequestStatus.Approved => "Onaylandı",
+        TransferRequestStatus.Rejected => "Reddedildi",
+        TransferRequestStatus.Cancelled => "İptal",
+        _ => s.ToString()
+    };
+
     public static string Of(AiSummaryType t) => t switch
     {
         AiSummaryType.Weekly => "Haftalık",
@@ -156,6 +165,15 @@ public static class DisplayText
         LeaveRequestStatus.Approved => "bg-success",
         LeaveRequestStatus.Rejected => "bg-danger",
         LeaveRequestStatus.Cancelled => "bg-secondary",
+        _ => "bg-secondary"
+    };
+
+    public static string BadgeClass(TransferRequestStatus s) => s switch
+    {
+        TransferRequestStatus.Pending => "bg-warning text-dark",
+        TransferRequestStatus.Approved => "bg-success",
+        TransferRequestStatus.Rejected => "bg-danger",
+        TransferRequestStatus.Cancelled => "bg-secondary",
         _ => "bg-secondary"
     };
 }

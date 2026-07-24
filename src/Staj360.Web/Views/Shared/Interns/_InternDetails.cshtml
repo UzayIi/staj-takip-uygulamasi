@@ -1,0 +1,250 @@
+@model Staj360.Application.Services.Internships.InternDetailDto
+@{
+    string OrDash(string? v) => string.IsNullOrWhiteSpace(v) ? "Bilgi girilmemiş" : v;
+}
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Kişisel ve Eğitim</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-4">Ad Soyad</dt><dd class="col-sm-8 fw-semibold">@Model.FullName</dd>
+                    <dt class="col-sm-4">Öğrenci No</dt><dd class="col-sm-8">@Model.StudentNumber</dd>
+                    <dt class="col-sm-4">E-posta</dt><dd class="col-sm-8">@OrDash(Model.Email)</dd>
+                    <dt class="col-sm-4">Telefon</dt><dd class="col-sm-8">@OrDash(Model.PhoneNumber)</dd>
+                    <dt class="col-sm-4">Üniversite</dt><dd class="col-sm-8">@OrDash(Model.University)</dd>
+                    <dt class="col-sm-4">Fakülte</dt><dd class="col-sm-8">@OrDash(Model.Faculty)</dd>
+                    <dt class="col-sm-4">Bölüm</dt><dd class="col-sm-8">@OrDash(Model.SchoolDepartment)</dd>
+                    <dt class="col-sm-4">Sınıf</dt><dd class="col-sm-8">@OrDash(Model.ClassLevel)</dd>
+                    <dt class="col-sm-4">Adres</dt><dd class="col-sm-8" style="white-space:pre-wrap">@OrDash(Model.Address)</dd>
+                    <dt class="col-sm-4">Durum</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsActive) { <span class="badge bg-success">Aktif</span> }
+                        else { <span class="badge bg-secondary">Pasif</span> }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Kurumsal</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-4">Daire Başkanlığı</dt><dd class="col-sm-8">@OrDash(Model.DirectorateName)</dd>
+                    <dt class="col-sm-4">Şube Müdürlüğü</dt><dd class="col-sm-8">@Model.OrganizationUnitName</dd>
+                    <dt class="col-sm-4">Danışman</dt><dd class="col-sm-8">@OrDash(Model.MentorFullName)</dd>
+                    <dt class="col-sm-4">Staj dönemi</dt>
+                    <dd class="col-sm-8">
+                        @(Model.PeriodStartDate?.ToString("dd.MM.yyyy") ?? "—") —
+                        @(Model.PeriodEndDate?.ToString("dd.MM.yyyy") ?? "—")
+                        @if (Model.PeriodStatus.HasValue)
+                        {
+                            <span class="badge ms-1 @DisplayText.BadgeClass(Model.PeriodStatus.Value)">@DisplayText.Of(Model.PeriodStatus.Value)</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Projeler (@Model.Projects.Count)</div>
+            <div class="card-body p-0">
+                @if (Model.Projects.Count == 0)
+                {
+                    <div class="p-3 text-muted small">Proje ataması yok.</div>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Proje</th><th>İlerleme</th><th>Durum</th></tr></thead>
+                        <tbody>
+                        @foreach (var p in Model.Projects)
+                        {
+                            <tr>
+                                <td>@p.Name</td>
+                                <td>%@p.ProgressPercentage</td>
+                                <td><span class="badge @DisplayText.BadgeClass(p.Status)">@DisplayText.Of(p.Status)</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Görevler (@Model.Tasks.Count)</div>
+            <div class="card-body p-0">
+                @if (Model.Tasks.Count == 0)
+                {
+                    <div class="p-3 text-muted small">Görev yok.</div>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Görev</th><th>Durum</th><th>Termin</th></tr></thead>
+                        <tbody>
+                        @foreach (var t in Model.Tasks)
+                        {
+                            <tr>
+                                <td>@t.Title<div class="text-muted small">@(t.ProjectName ?? "")</div></td>
+                                <td><span class="badge @DisplayText.BadgeClass(t.Status)">@DisplayText.Of(t.Status)</span></td>
+                                <td>@(t.DueDate?.ToString("dd.MM.yyyy") ?? "—")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Devam Özeti</div>
+            <div class="card-body small">
+                <div>Kayıtlı gün: <strong>@Model.Attendance.TotalRecordedDays</strong></div>
+                <div>Hazır: @Model.Attendance.PresentDays</div>
+                <div>Geç: @Model.Attendance.LateDays</div>
+                <div>Eksik: @Model.Attendance.IncompleteDays</div>
+                <div>İzinli: @Model.Attendance.OnLeaveDays</div>
+                <div>Devamsız: @Model.Attendance.AbsentDays</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Günlük Raporlar (@Model.DailyReports.Count)</div>
+            <div class="card-body p-0">
+                @if (Model.DailyReports.Count == 0)
+                {
+                    <div class="p-3 text-muted small">Rapor yok.</div>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Tarih</th><th>Birim</th><th>Durum</th></tr></thead>
+                        <tbody>
+                        @foreach (var r in Model.DailyReports)
+                        {
+                            <tr>
+                                <td>@r.ReportDate.ToString("dd.MM.yyyy")</td>
+                                <td>@(r.UnitName ?? "—")</td>
+                                <td><span class="badge @DisplayText.BadgeClass(r.Status)">@DisplayText.Of(r.Status)</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">İzinler</div>
+            <div class="card-body p-0">
+                @if (Model.Leaves.Count == 0)
+                {
+                    <div class="p-3 text-muted small">İzin kaydı yok.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush small">
+                    @foreach (var l in Model.Leaves)
+                    {
+                        <li class="list-group-item">
+                            @DisplayText.Of(l.LeaveType): @l.StartDate.ToString("dd.MM.yyyy") – @l.EndDate.ToString("dd.MM.yyyy")
+                            <span class="badge @DisplayText.BadgeClass(l.Status)">@DisplayText.Of(l.Status)</span>
+                        </li>
+                    }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Değerlendirmeler</div>
+            <div class="card-body p-0">
+                @if (Model.Evaluations.Count == 0)
+                {
+                    <div class="p-3 text-muted small">Değerlendirme yok.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush small">
+                    @foreach (var e in Model.Evaluations)
+                    {
+                        <li class="list-group-item">
+                            @e.EvaluationDate.ToString("dd.MM.yyyy") — Ort. @e.AverageScore.ToString("0.0")
+                            <div class="text-muted">@(e.GeneralComment ?? "")</div>
+                        </li>
+                    }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1 mb-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Transfer Geçmişi</div>
+            <div class="card-body p-0">
+                @if (Model.Transfers.Count == 0)
+                {
+                    <div class="p-3 text-muted small">Transfer kaydı yok.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush small">
+                    @foreach (var t in Model.Transfers)
+                    {
+                        <li class="list-group-item">
+                            @t.SourceUnitName → @t.TargetUnitName
+                            <span class="badge @DisplayText.BadgeClass(t.Status)">@DisplayText.Of(t.Status)</span>
+                        </li>
+                    }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Birim Atama Geçmişi</div>
+            <div class="card-body p-0">
+                @if (Model.UnitHistory.Count == 0)
+                {
+                    <div class="p-3 text-muted small">Atama geçmişi yok.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush small">
+                    @foreach (var u in Model.UnitHistory)
+                    {
+                        <li class="list-group-item">
+                            @u.UnitName — @u.StartDate.ToString("dd.MM.yyyy")
+                            @(u.EndDate.HasValue ? "– " + u.EndDate.Value.ToString("dd.MM.yyyy") : "(devam)")
+                            @if (u.IsActive) { <span class="badge bg-success">Aktif</span> }
+                            <div class="text-muted">Danışman: @(u.AdvisorFullName ?? "—")</div>
+                        </li>
+                    }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

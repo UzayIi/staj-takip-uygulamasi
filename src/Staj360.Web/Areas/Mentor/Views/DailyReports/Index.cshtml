@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Günlük Raporlar";
     var status = ViewData["Status"] as DailyReportStatus?;
+    var names = ViewBag.InternNames as IDictionary<Guid, string> ?? new Dictionary<Guid, string>();
 }
 <h1 class="h4 mb-3">Günlük Raporlar</h1>
 <div class="btn-group mb-3">
@@ -21,8 +22,12 @@ else
         <tbody>
         @foreach (var r in Model)
         {
+            var uid = r.InternshipPeriod?.InternProfile?.UserId;
+            var fullName = uid.HasValue && names.TryGetValue(uid.Value, out var n) && !string.IsNullOrWhiteSpace(n)
+                ? n
+                : (r.InternshipPeriod?.InternProfile?.StudentNumber ?? "—");
             <tr>
-                <td>@r.InternshipPeriod?.InternProfile?.StudentNumber</td>
+                <td>@fullName</td>
                 <td>@r.ReportDate.ToString("dd.MM.yyyy")</td>
                 <td>@r.WorkItems.Count</td>
                 <td><span class="badge @DisplayText.BadgeClass(r.Status)">@DisplayText.Of(r.Status)</span></td>

@@ -13,31 +13,6 @@ else
     <div class="row g-3 mb-4">
         <div class="col-md-6 col-lg-4">
             <div class="card h-100"><div class="card-body">
-                <h6 class="text-muted">Bugünkü Devam Durumu</h6>
-                @{
-                    var t = Model.Today;
-                    var open = t?.HasOpenCheckIn ?? false;
-                }
-                <p class="mb-1">
-                    <strong>Giriş:</strong> @(t?.FirstCheckInLocal?.ToString("HH:mm") ?? "-")
-                    &nbsp; <strong>Çıkış:</strong> @(t?.LastCheckOutLocal?.ToString("HH:mm") ?? "-")
-                </p>
-                <p class="mb-1"><strong>Toplam:</strong> @((t?.TotalWorkedMinutes ?? 0) / 60) sa @((t?.TotalWorkedMinutes ?? 0) % 60) dk</p>
-                @if (t is not null && t.IsLate) { <span class="badge bg-warning text-dark">Geç Kalındı</span> }
-                <div class="mt-3 d-flex gap-2">
-                    @if (!open)
-                    {
-                        <form asp-action="CheckIn" method="post"><button class="btn btn-success"><i class="bi bi-box-arrow-in-right"></i> Giriş Yap</button></form>
-                    }
-                    else
-                    {
-                        <form asp-action="CheckOut" method="post"><button class="btn btn-danger"><i class="bi bi-box-arrow-right"></i> Çıkış Yap</button></form>
-                    }
-                </div>
-            </div></div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100"><div class="card-body">
                 <h6 class="text-muted">Günlük Rapor</h6>
                 @if (Model.HasTodayReport && Model.TodayReportStatus is not null)
                 {

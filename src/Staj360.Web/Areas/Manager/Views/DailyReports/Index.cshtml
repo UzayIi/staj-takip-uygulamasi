@@ -1,0 +1,34 @@
+@model IReadOnlyList<Staj360.Domain.Entities.DailyReport>
+@{
+    ViewData["Title"] = "Günlük Raporlar";
+    var names = ViewBag.InternNames as IDictionary<Guid, string> ?? new Dictionary<Guid, string>();
+}
+<h1 class="h4 mb-3">Günlük Raporlar (Salt Okunur)</h1>
+<div class="card"><div class="card-body p-0">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-journal-text"></i><p>Birimlerinizde rapor bulunmuyor.</p></div>
+}
+else
+{
+    <table class="table table-hover mb-0 align-middle">
+        <thead><tr><th>Stajyer</th><th>Tarih</th><th>Birim</th><th>Durum</th><th class="text-end">İşlem</th></tr></thead>
+        <tbody>
+        @foreach (var r in Model)
+        {
+            var uid = r.InternshipPeriod?.InternProfile?.UserId;
+            var fullName = uid.HasValue && names.TryGetValue(uid.Value, out var n) && !string.IsNullOrWhiteSpace(n)
+                ? n
+                : (r.InternshipPeriod?.InternProfile?.StudentNumber ?? "—");
+            <tr>
+                <td>@fullName</td>
+                <td>@r.ReportDate.ToString("dd.MM.yyyy")</td>
+                <td class="text-muted small">@(r.OrganizationUnit?.Name ?? "—")</td>
+                <td><span class="badge @DisplayText.BadgeClass(r.Status)">@DisplayText.Of(r.Status)</span></td>
+                <td class="text-end"><a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary">Görüntüle</a></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+</div></div>

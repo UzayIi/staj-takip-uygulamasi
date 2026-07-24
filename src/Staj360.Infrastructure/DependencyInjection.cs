@@ -104,6 +104,8 @@ public static class DependencyInjection
         else
             services.AddScoped<IReportSummaryService, NullReportSummaryService>();
 
+        services.AddHostedService<AuditRetentionService>();
+
         return services;
     }
 }

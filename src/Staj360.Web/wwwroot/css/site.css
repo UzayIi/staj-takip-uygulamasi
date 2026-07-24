@@ -108,3 +108,19 @@ body {
     .sidebar.open { transform: translateX(0); }
     .app-main { margin-left: 0; }
 }
+
+/* Teşkilat birim ağacı */
+.org-unit-tree {
+    border: 1px solid #e5e9ef;
+    border-radius: .5rem;
+    padding: .75rem;
+    background: #fafbfc;
+    max-height: 320px;
+    overflow: auto;
+}
+.org-unit-tree-spacer { width: 1.25rem; display: inline-block; }
+.org-unit-tree-toggle { width: 1.25rem; line-height: 1; color: #5a6a7a; text-decoration: none; }
+.org-unit-tree-label { cursor: pointer; }
+.org-unit-tree-item[aria-expanded="false"] > .org-unit-tree-children { display: none; }
+.org-unit-tree-breadcrumb:empty { display: none; }
+.org-unit-tree-breadcrumb:not(:empty)::before { content: "Seçim: "; font-weight: 600; }

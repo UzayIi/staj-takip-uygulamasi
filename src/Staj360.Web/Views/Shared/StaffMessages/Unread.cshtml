@@ -1,0 +1,35 @@
+@model IReadOnlyList<Staj360.Application.Services.Messaging.StaffMessageListItemDto>
+@{
+    ViewData["Title"] = "Okunmamış Mesajlar";
+    var area = (string)ViewData["AreaName"]!;
+    var tz = (Staj360.Application.Abstractions.ITimeZoneService)Context.RequestServices.GetService(typeof(Staj360.Application.Abstractions.ITimeZoneService))!;
+}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h4 mb-0">Mesajlar — Okunmamış</h1>
+    <a asp-area="@area" asp-controller="Messages" asp-action="Compose" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square"></i> Yeni Mesaj</a>
+</div>
+<partial name="~/Views/Shared/StaffMessages/_FolderNav.cshtml" />
+<div class="card"><div class="card-body p-0">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-envelope-open"></i><p>Okunmamış mesaj yok.</p></div>
+}
+else
+{
+    <table class="table table-hover mb-0 align-middle">
+        <thead><tr><th>Gönderen</th><th>Konu</th><th>Birim</th><th>Tarih</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var m in Model)
+        {
+            <tr class="fw-semibold">
+                <td>@m.OtherUserName</td>
+                <td><a asp-area="@area" asp-controller="Messages" asp-action="Details" asp-route-id="@m.Id">@Html.Raw(m.Subject)</a></td>
+                <td class="text-muted small">@m.OrganizationUnitName</td>
+                <td class="text-muted small">@tz.ToLocal(m.SentAtUtc).ToString("dd.MM.yyyy HH:mm")</td>
+                <td class="text-end"><a asp-area="@area" asp-controller="Messages" asp-action="Details" asp-route-id="@m.Id" class="btn btn-sm btn-outline-primary">Aç</a></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+</div></div>

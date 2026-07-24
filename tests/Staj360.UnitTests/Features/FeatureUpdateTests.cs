@@ -167,11 +167,13 @@ public class FeatureUpdateTests
             db.DailyReports.Add(new DailyReport
             {
                 InternshipPeriodId = periodId, ReportDate = new DateOnly(2026, 7, 10),
+                OrganizationUnitId = unit.Id,
                 Status = DailyReportStatus.Draft, GeneralNotes = "Taslak gizli"
             });
             db.DailyReports.Add(new DailyReport
             {
                 InternshipPeriodId = periodId, ReportDate = new DateOnly(2026, 7, 11),
+                OrganizationUnitId = unit.Id,
                 Status = DailyReportStatus.Submitted, GeneralNotes = "Gönderilmiş iş",
                 WorkItems = { new DailyWorkItem { Title = "API geliştirmesi", DurationMinutes = 120 } }
             });

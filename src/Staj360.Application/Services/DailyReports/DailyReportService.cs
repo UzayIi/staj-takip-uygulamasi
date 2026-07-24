@@ -8,21 +8,26 @@ namespace Staj360.Application.Services.DailyReports;
 
 /// <summary>
 /// Günlük rapor akışını (Draft → Submitted → RevisionRequested/Approved/Rejected)
-/// ve yetkilendirme kurallarını uygular.
+/// ve yetkilendirme kurallarını uygular. Rapor tarihi sunucuda Europe/Istanbul günüdür.
 /// </summary>
 public class DailyReportService : IDailyReportService
 {
-    // Bir çalışma kaleminin makul üst süre sınırı (dakika). Mantıksız yüksek değerler reddedilir.
     private const int MaxWorkItemMinutes = 24 * 60;
 
     private readonly IApplicationDbContext _db;
     private readonly IClock _clock;
+    private readonly ITimeZoneService _timeZone;
     private readonly IAuditLogService _audit;
 
-    public DailyReportService(IApplicationDbContext db, IClock clock, IAuditLogService audit)
+    public DailyReportService(
+        IApplicationDbContext db,
+        IClock clock,
+        ITimeZoneService timeZone,
+        IAuditLogService audit)
     {
         _db = db;
         _clock = clock;
+        _timeZone = timeZone;
         _audit = audit;
     }
 
@@ -32,15 +37,33 @@ public class DailyReportService : IDailyReportService
         if (period is null)
             return ServiceResult<DailyReport>.Fail("Aktif bir staj döneminiz bulunmuyor.", "NO_ACTIVE_PERIOD");
 
+        // İstemci tarihine güvenilmez; İstanbul takvim günü kullanılır.
+        var reportDate = _timeZone.LocalDate(_clock.UtcNow);
+
         var exists = await _db.DailyReports.AnyAsync(r =>
-            r.InternshipPeriodId == period.Id && r.ReportDate == command.ReportDate && !r.IsDeleted, cancellationToken);
+            r.InternshipPeriodId == period.Id && r.ReportDate == reportDate && !r.IsDeleted, cancellationToken);
         if (exists)
             return ServiceResult<DailyReport>.Fail("Bu tarih için zaten bir raporunuz var. Aynı gün ikinci rapor oluşturulamaz.", "DUPLICATE_REPORT");
+
+        var assignment = await _db.InternUnitAssignments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a =>
+                a.InternProfileId == period.InternProfileId &&
+                a.IsActive &&
+                !a.IsDeleted &&
+                a.StartDate <= reportDate &&
+                (a.EndDate == null || a.EndDate >= reportDate), cancellationToken);
+
+        if (assignment is null)
+            return ServiceResult<DailyReport>.Fail(
+                "Bugün için aktif müdürlük atamanız bulunamadı. Rapor oluşturmak için birime atanmış olmanız gerekir.",
+                "NO_ACTIVE_UNIT");
 
         var report = new DailyReport
         {
             InternshipPeriodId = period.Id,
-            ReportDate = command.ReportDate,
+            ReportDate = reportDate,
+            OrganizationUnitId = assignment.OrganizationUnitId,
             GeneralNotes = command.GeneralNotes,
             ProblemsEncountered = command.ProblemsEncountered,
             SolutionsApplied = command.SolutionsApplied,
@@ -49,6 +72,10 @@ public class DailyReportService : IDailyReportService
         };
         _db.DailyReports.Add(report);
         await _db.SaveChangesAsync(cancellationToken);
+        await _audit.LogAsync(nameof(DailyReport), report.Id.ToString(), "Create",
+            organizationUnitId: report.OrganizationUnitId,
+            safeDescription: "Günlük rapor taslağı oluşturuldu.",
+            cancellationToken: cancellationToken);
         return ServiceResult<DailyReport>.Ok(report);
     }
 
@@ -61,11 +88,16 @@ public class DailyReportService : IDailyReportService
         if (!IsEditable(report.Status))
             return ServiceResult.Fail("Gönderilmiş veya onaylanmış rapor düzenlenemez.", "NOT_EDITABLE");
 
+        // ReportDate ve OrganizationUnitId değiştirilmez.
         report.GeneralNotes = command.GeneralNotes;
         report.ProblemsEncountered = command.ProblemsEncountered;
         report.SolutionsApplied = command.SolutionsApplied;
         report.TomorrowPlan = command.TomorrowPlan;
         await _db.SaveChangesAsync(cancellationToken);
+        await _audit.LogAsync(nameof(DailyReport), report.Id.ToString(), "Update",
+            organizationUnitId: report.OrganizationUnitId,
+            safeDescription: "Günlük rapor güncellendi.",
+            cancellationToken: cancellationToken);
         return ServiceResult.Ok();
     }
 
@@ -137,7 +169,10 @@ public class DailyReportService : IDailyReportService
         report.Status = DailyReportStatus.Submitted;
         report.SubmittedAtUtc = _clock.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
-        await _audit.LogAsync(nameof(DailyReport), report.Id.ToString(), "Submit", cancellationToken: cancellationToken);
+        await _audit.LogAsync(nameof(DailyReport), report.Id.ToString(), "Submit",
+            organizationUnitId: report.OrganizationUnitId,
+            safeDescription: "Günlük rapor gönderildi.",
+            cancellationToken: cancellationToken);
         return ServiceResult.Ok();
     }
 
@@ -151,7 +186,6 @@ public class DailyReportService : IDailyReportService
         if (report is null || report.InternshipPeriod is null)
             return ServiceResult.Fail("Rapor bulunamadı.", "NOT_FOUND");
 
-        // Mentor yalnızca kendisine atanmış stajyerin raporunu inceleyebilir.
         if (report.InternshipPeriod.MentorUserId != mentorUserId)
             return ServiceResult.Fail("Bu rapor size atanmış bir stajyere ait değil.", "FORBIDDEN");
 
@@ -174,7 +208,10 @@ public class DailyReportService : IDailyReportService
         report.ReviewedByUserId = mentorUserId;
         await _db.SaveChangesAsync(cancellationToken);
 
-        await _audit.LogAsync(nameof(DailyReport), report.Id.ToString(), $"Review:{command.Decision}", cancellationToken: cancellationToken);
+        await _audit.LogAsync(nameof(DailyReport), report.Id.ToString(), $"Review:{command.Decision}",
+            organizationUnitId: report.OrganizationUnitId,
+            safeDescription: "Günlük rapor incelendi.",
+            cancellationToken: cancellationToken);
         return ServiceResult.Ok();
     }
 
@@ -183,6 +220,7 @@ public class DailyReportService : IDailyReportService
         var report = await _db.DailyReports
             .AsNoTracking()
             .Include(r => r.WorkItems)
+            .Include(r => r.OrganizationUnit)
             .Include(r => r.InternshipPeriod)!.ThenInclude(p => p!.InternProfile)
             .FirstOrDefaultAsync(r => r.Id == reportId && !r.IsDeleted, cancellationToken);
 
@@ -197,6 +235,7 @@ public class DailyReportService : IDailyReportService
         var report = await _db.DailyReports
             .AsNoTracking()
             .Include(r => r.WorkItems)
+            .Include(r => r.OrganizationUnit)
             .Include(r => r.InternshipPeriod)!.ThenInclude(p => p!.InternProfile)
             .FirstOrDefaultAsync(r => r.Id == reportId && !r.IsDeleted, cancellationToken);
 
@@ -228,6 +267,41 @@ public class DailyReportService : IDailyReportService
             query = query.Where(r => r.Status == status.Value);
 
         return await query.OrderByDescending(r => r.ReportDate).ToListAsync(cancellationToken);
+    }
+
+    /// <summary>Yönetici: sorumlu birimlerdeki raporları görüntüleme (onay yok).</summary>
+    public async Task<IReadOnlyList<DailyReport>> ListForManagerUnitsAsync(
+        IReadOnlyCollection<Guid> unitIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (unitIds.Count == 0)
+            return Array.Empty<DailyReport>();
+
+        return await _db.DailyReports.AsNoTracking()
+            .Include(r => r.WorkItems)
+            .Include(r => r.OrganizationUnit)
+            .Include(r => r.InternshipPeriod)!.ThenInclude(p => p!.InternProfile)
+            .Where(r => !r.IsDeleted && unitIds.Contains(r.OrganizationUnitId))
+            .OrderByDescending(r => r.ReportDate)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<ServiceResult<DailyReport>> GetForManagerAsync(
+        IReadOnlyCollection<Guid> unitIds,
+        Guid reportId,
+        CancellationToken cancellationToken = default)
+    {
+        var report = await _db.DailyReports
+            .AsNoTracking()
+            .Include(r => r.WorkItems)
+            .Include(r => r.OrganizationUnit)
+            .Include(r => r.InternshipPeriod)!.ThenInclude(p => p!.InternProfile)
+            .FirstOrDefaultAsync(r => r.Id == reportId && !r.IsDeleted, cancellationToken);
+
+        if (report is null || !unitIds.Contains(report.OrganizationUnitId))
+            return ServiceResult<DailyReport>.Fail("Rapor bulunamadı veya erişim yetkiniz yok.", "FORBIDDEN");
+
+        return ServiceResult<DailyReport>.Ok(report);
     }
 
     private static bool IsEditable(DailyReportStatus status) =>

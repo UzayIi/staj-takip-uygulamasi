@@ -1,0 +1,17 @@
+@model Staj360.Web.ViewComponents.OrganizationUnitTreeViewModel
+@{
+    var treeId = Model.TreeId;
+}
+<div class="org-unit-tree" id="@treeId" data-multi="@(Model.MultiSelect ? "true" : "false")" role="tree" aria-label="Teşkilat birimleri">
+    <div class="org-unit-tree-toolbar mb-2">
+        <label class="visually-hidden" for="@(treeId)_search">Birim ara</label>
+        <input type="search" id="@(treeId)_search" class="form-control form-control-sm org-unit-tree-search" placeholder="@Model.SearchPlaceholder" autocomplete="off" aria-controls="@(treeId)_list" />
+        <div class="org-unit-tree-breadcrumb small text-muted mt-1" aria-live="polite"></div>
+    </div>
+    <ul class="org-unit-tree-list list-unstyled mb-0" id="@(treeId)_list" role="group">
+        @foreach (var node in Model.Nodes)
+        {
+            @await Html.PartialAsync("~/Views/Shared/Components/OrganizationUnitTree/_Node.cshtml", (node, Model))
+        }
+    </ul>
+</div>

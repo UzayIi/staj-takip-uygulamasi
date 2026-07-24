@@ -30,7 +30,8 @@ public static class TestDbFactory
     public static async Task<(AppDbContext Db, Guid UserId, Guid MentorId, Guid PeriodId, Guid ProfileId)> SeedActiveInternAsync(
         DateTime utcNow,
         TimeOnly scheduleStart,
-        int graceMinutes = 15)
+        int graceMinutes = 15,
+        bool seedUnitAssignment = true)
     {
         var clock = new TestClock(utcNow);
         var db = Create(clock);
@@ -84,6 +85,19 @@ public static class TestDbFactory
         db.InternProfiles.Add(profile);
         db.InternshipPeriods.Add(period);
         await db.SaveChangesAsync();
+
+        if (seedUnitAssignment)
+        {
+            db.InternUnitAssignments.Add(new InternUnitAssignment
+            {
+                InternProfileId = profile.Id,
+                OrganizationUnitId = organizationUnit.Id,
+                AdvisorUserId = mentorId,
+                StartDate = today.AddDays(-30),
+                IsActive = true
+            });
+            await db.SaveChangesAsync();
+        }
 
         return (db, userId, mentorId, period.Id, profile.Id);
     }

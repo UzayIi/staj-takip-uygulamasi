@@ -8,7 +8,15 @@ public class DailyReport : AuditableEntity
     public Guid InternshipPeriodId { get; set; }
     public InternshipPeriod? InternshipPeriod { get; set; }
 
+    /// <summary>İstanbul takvim günü. Oluşturulduktan sonra değiştirilmez.</summary>
     public DateOnly ReportDate { get; set; }
+
+    /// <summary>
+    /// Rapor oluşturulurken stajyerin aktif müdürlük atamasının birim kimliği (snapshot).
+    /// Transfer sonrası eski raporların birim bilgisi korunur.
+    /// </summary>
+    public Guid OrganizationUnitId { get; set; }
+    public OrganizationUnit? OrganizationUnit { get; set; }
 
     public string? GeneralNotes { get; set; }
     public string? ProblemsEncountered { get; set; }

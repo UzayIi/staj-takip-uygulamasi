@@ -19,6 +19,9 @@ public class InternTransferRequest : AuditableEntity
 
     public TransferRequestStatus Status { get; set; } = TransferRequestStatus.Pending;
 
+    /// <summary>Kaynak yöneticinin planladığı yeni görevlendirme başlangıç tarihi.</summary>
+    public DateOnly? PlannedStartDate { get; set; }
+
     /// <summary>Onay sırasında seçilen hedef danışman (onayda zorunlu).</summary>
     public Guid? TargetAdvisorUserId { get; set; }
 

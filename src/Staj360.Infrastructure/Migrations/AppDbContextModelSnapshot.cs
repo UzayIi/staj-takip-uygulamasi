@@ -538,6 +538,21 @@ namespace Staj360.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("ActorNameSnapshot")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ActorRoleSnapshot")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -551,9 +566,16 @@ namespace Staj360.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("FailureReasonCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("IpAddress")
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
+
+                    b.Property<bool>("IsSuccessful")
+                        .HasColumnType("bit");
 
                     b.Property<string>("NewValues")
                         .HasColumnType("nvarchar(max)");
@@ -561,12 +583,39 @@ namespace Staj360.Infrastructure.Migrations
                     b.Property<string>("OldValues")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("OrganizationUnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RequestMethod")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("RequestPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SafeDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Action");
+
+                    b.HasIndex("ActorUserId");
+
                     b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("IpAddress");
+
+                    b.HasIndex("OrganizationUnitId");
 
                     b.HasIndex("EntityName", "EntityId");
 
@@ -598,6 +647,9 @@ namespace Staj360.Infrastructure.Migrations
                     b.Property<string>("MentorComment")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid>("OrganizationUnitId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ProblemsEncountered")
                         .HasMaxLength(4000)
@@ -640,6 +692,8 @@ namespace Staj360.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationUnitId");
 
                     b.HasIndex("Status");
 
@@ -998,6 +1052,9 @@ namespace Staj360.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<DateOnly?>("PlannedStartDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("RequestNote")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
@@ -1033,6 +1090,8 @@ namespace Staj360.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("InternProfileId");
+
+                    b.HasIndex("PlannedStartDate");
 
                     b.HasIndex("SourceOrganizationUnitId");
 
@@ -1615,6 +1674,71 @@ namespace Staj360.Infrastructure.Migrations
                     b.ToTable("ProjectTasks");
                 });
 
+            modelBuilder.Entity("Staj360.Domain.Entities.StaffMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("ArchivedByRecipient")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ArchivedBySender")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("OrganizationUnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ParentMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RecipientUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SentAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("ThreadId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationUnitId");
+
+                    b.HasIndex("ParentMessageId");
+
+                    b.HasIndex("RecipientUserId");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("SentAtUtc");
+
+                    b.HasIndex("ThreadId");
+
+                    b.HasIndex("RecipientUserId", "IsRead");
+
+                    b.ToTable("StaffMessages");
+                });
+
             modelBuilder.Entity("Staj360.Domain.Entities.WorkSchedule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1899,7 +2023,15 @@ namespace Staj360.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Staj360.Domain.Entities.OrganizationUnit", "OrganizationUnit")
+                        .WithMany()
+                        .HasForeignKey("OrganizationUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("InternshipPeriod");
+
+                    b.Navigation("OrganizationUnit");
                 });
 
             modelBuilder.Entity("Staj360.Domain.Entities.DailyWorkItem", b =>
@@ -2111,6 +2243,24 @@ namespace Staj360.Infrastructure.Migrations
                     b.Navigation("AssignedInternProfile");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Staj360.Domain.Entities.StaffMessage", b =>
+                {
+                    b.HasOne("Staj360.Domain.Entities.OrganizationUnit", "OrganizationUnit")
+                        .WithMany()
+                        .HasForeignKey("OrganizationUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Staj360.Domain.Entities.StaffMessage", "ParentMessage")
+                        .WithMany()
+                        .HasForeignKey("ParentMessageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("OrganizationUnit");
+
+                    b.Navigation("ParentMessage");
                 });
 
             modelBuilder.Entity("Staj360.Domain.Entities.AttendanceDay", b =>

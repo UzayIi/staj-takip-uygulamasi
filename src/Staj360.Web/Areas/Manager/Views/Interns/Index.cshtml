@@ -1,4 +1,4 @@
-@model IReadOnlyList<Staj360.Domain.Entities.InternProfile>
+@model IReadOnlyList<Staj360.Web.Areas.Manager.Controllers.ManagerInternRow>
 @{
     ViewData["Title"] = "Stajyerler";
 }
@@ -11,15 +11,30 @@
 else
 {
     <table class="table table-hover mb-0 align-middle">
-        <thead><tr><th>Öğrenci No</th><th>Şube</th><th>Üniversite</th><th>Durum</th></tr></thead>
+        <thead>
+            <tr>
+                <th>Ad Soyad</th>
+                <th>Öğrenci No</th>
+                <th>Şube</th>
+                <th>Üniversite</th>
+                <th>Durum</th>
+                <th class="text-end">İşlem</th>
+            </tr>
+        </thead>
         <tbody>
         @foreach (var i in Model)
         {
             <tr>
-                <td>@i.StudentNumber</td>
-                <td>@(i.CurrentOrganizationUnit?.Name ?? "—")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@i.Id" class="fw-semibold text-decoration-none">@i.FullName</a>
+                </td>
+                <td class="text-muted">@i.StudentNumber</td>
+                <td>@i.BranchName</td>
                 <td class="text-muted">@(i.University ?? "—")</td>
                 <td>@if (i.IsActive) { <span class="badge bg-success">Aktif</span> } else { <span class="badge bg-secondary">Pasif</span> }</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@i.Id" class="btn btn-sm btn-outline-primary">Detayları Görüntüle</a>
+                </td>
             </tr>
         }
         </tbody>

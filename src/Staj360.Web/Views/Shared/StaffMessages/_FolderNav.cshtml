@@ -1,0 +1,9 @@
+@{
+    var area = (string)ViewData["AreaName"]!;
+    var folder = (string?)ViewData["Folder"] ?? "Inbox";
+}
+<div class="btn-group mb-3">
+    <a asp-area="@area" asp-controller="Messages" asp-action="Inbox" class="btn btn-sm @(folder == "Inbox" ? "btn-primary" : "btn-outline-primary")">Gelen</a>
+    <a asp-area="@area" asp-controller="Messages" asp-action="Sent" class="btn btn-sm @(folder == "Sent" ? "btn-primary" : "btn-outline-primary")">Gönderilen</a>
+    <a asp-area="@area" asp-controller="Messages" asp-action="Unread" class="btn btn-sm @(folder == "Unread" ? "btn-primary" : "btn-outline-primary")">Okunmamış</a>
+</div>

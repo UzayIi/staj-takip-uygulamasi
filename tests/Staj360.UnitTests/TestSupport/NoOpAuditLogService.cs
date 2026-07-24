@@ -10,6 +10,13 @@ public sealed class NoOpAuditLogService : IAuditLogService
         string action,
         object? oldValues = null,
         object? newValues = null,
+        Guid? organizationUnitId = null,
+        string? safeDescription = null,
+        bool isSuccessful = true,
+        string? failureReasonCode = null,
+        Guid? actorUserId = null,
+        string? actorNameSnapshot = null,
+        string? actorRoleSnapshot = null,
         CancellationToken cancellationToken = default) =>
         Task.CompletedTask;
 }

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -41,17 +42,20 @@ public static class DemoLoginAccounts
 
     public static readonly AccountDef[] Definitions =
     [
-        new(SuperAdminEmail, AppRoles.SuperAdmin, "Demo SuperAdmin",
+        new(SuperAdminEmail, AppRoles.SuperAdmin, "Selin Karaca",
             ["admin.demo@stajamed.local"]),
-        new(AdminEmail, AppRoles.Admin, "Demo Admin",
+        new(AdminEmail, AppRoles.Admin, "Burak Öztürk",
             ["admin.yonetim@stajamed.local"]),
-        new(ManagerEmail, AppRoles.Manager, "Demo Yönetici",
+        new(ManagerEmail, AppRoles.Manager, "Merve Acar",
             []),
-        new(MentorEmail, AppRoles.Mentor, "Demo Danışman",
+        new(MentorEmail, AppRoles.Mentor, "Aylin Demirtaş",
             ["mentor.aylin@stajamed.local", "mentor@staj360.local"]),
-        new(InternEmail, AppRoles.Intern, "Demo Stajyer",
-            ["stajyer.ayse@stajamed.local", "stajyer@staj360.local", "DEMO-2001"])
+        new(InternEmail, AppRoles.Intern, "Ayşe Yılmaz",
+            ["stajyer.ayse@stajamed.local", "stajyer@staj360.local", "STJ-2026-2001"])
     ];
+
+    public const string CanonicalInternStudentNumber = "STJ-2026-2001";
+    private static readonly Regex LegacyDemoStudentNumber = new(@"^DEMO-(\d+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     public sealed class EnsureResult
     {
@@ -91,7 +95,92 @@ public static class DemoLoginAccounts
         }
 
         await EnsureMinimalGraphAsync(db, result.UserIdsByEmail, logger, cancellationToken);
+        await NormalizeLegacyStudentNumbersAsync(db, logger, cancellationToken);
+        await SanitizeCanonicalFullNamesAsync(userManager, logger, cancellationToken);
         return result;
+    }
+
+    /// <summary>
+    /// DEMO-#### öğrenci numaralarını STJ-2026-#### biçimine dönüştürür (idempotent).
+    /// Hedef numara doluysa dönüşüm atlanır.
+    /// </summary>
+    public static async Task NormalizeLegacyStudentNumbersAsync(
+        AppDbContext db,
+        ILogger logger,
+        CancellationToken cancellationToken = default)
+    {
+        var candidates = await db.InternProfiles.IgnoreQueryFilters()
+            .Where(p => p.StudentNumber.StartsWith("DEMO-"))
+            .ToListAsync(cancellationToken);
+        if (candidates.Count == 0)
+            return;
+
+        var taken = new HashSet<string>(
+            await db.InternProfiles.IgnoreQueryFilters().Select(p => p.StudentNumber).ToListAsync(cancellationToken),
+            StringComparer.OrdinalIgnoreCase);
+
+        var changed = 0;
+        foreach (var profile in candidates)
+        {
+            var match = LegacyDemoStudentNumber.Match(profile.StudentNumber);
+            if (!match.Success)
+                continue;
+
+            var target = $"STJ-2026-{match.Groups[1].Value}";
+            if (taken.Contains(target) &&
+                !string.Equals(profile.StudentNumber, target, StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning(
+                    "Öğrenci no dönüşümü atlandı (hedef dolu): {From} -> {To}",
+                    profile.StudentNumber, target);
+                continue;
+            }
+
+            taken.Remove(profile.StudentNumber);
+            profile.StudentNumber = target;
+            taken.Add(target);
+            changed++;
+        }
+
+        if (changed > 0)
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Legacy DEMO öğrenci numaraları dönüştürüldü: {Count}", changed);
+        }
+    }
+
+    private static async Task SanitizeCanonicalFullNamesAsync(
+        UserManager<ApplicationUser> userManager,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        foreach (var def in Definitions)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var user = await userManager.FindByEmailAsync(def.TargetEmail);
+            if (user is null)
+                continue;
+
+            if (!LooksLikeDemoOrTestName(user.FullName))
+                continue;
+
+            user.FullName = def.FullName;
+            await userManager.UpdateAsync(user);
+            logger.LogInformation("Kanonik hesap görünen adı güncellendi: {Email}", def.TargetEmail);
+        }
+    }
+
+    private static bool LooksLikeDemoOrTestName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
+
+        return name.Contains("Demo", StringComparison.OrdinalIgnoreCase)
+               || name.Contains("Test User", StringComparison.OrdinalIgnoreCase)
+               || name.Contains("Test Intern", StringComparison.OrdinalIgnoreCase)
+               || name.Contains("Örnek Kullanıcı", StringComparison.OrdinalIgnoreCase)
+               || name.Contains("Sample User", StringComparison.OrdinalIgnoreCase)
+               || Regex.IsMatch(name, @"^(Stajyer|Mentor|Danışman|Yönetici|Kullanıcı)\s*\d+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     }
 
     private sealed class SingleResult
@@ -219,6 +308,12 @@ public static class DemoLoginAccounts
                 }
             }
 
+            if (!string.Equals(user.FullName, def.FullName, StringComparison.Ordinal))
+            {
+                user.FullName = def.FullName;
+                await userManager.UpdateAsync(user);
+            }
+
             // Mevcut kullanıcının parolasını demo parolasına senkronize et.
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
             var reset = await userManager.ResetPasswordAsync(user, token, password);
@@ -297,16 +392,20 @@ public static class DemoLoginAccounts
             var profile = await db.InternProfiles.IgnoreQueryFilters()
                 .FirstOrDefaultAsync(p => p.UserId == internUserId, cancellationToken)
                 ?? await db.InternProfiles.IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(p => p.StudentNumber == "DEMO-2001", cancellationToken);
+                    .FirstOrDefaultAsync(p => p.StudentNumber == CanonicalInternStudentNumber
+                                              || p.StudentNumber == "DEMO-2001", cancellationToken);
 
             if (profile is null)
             {
                 profile = new InternProfile
                 {
                     UserId = internUserId,
-                    StudentNumber = "DEMO-2001",
-                    University = "Demo Üniversitesi",
-                    SchoolDepartment = "Yazılım Mühendisliği",
+                    StudentNumber = CanonicalInternStudentNumber,
+                    University = "Dicle Üniversitesi",
+                    SchoolDepartment = "Bilgisayar Mühendisliği",
+                    ClassLevel = "3",
+                    PhoneNumber = "0555 010 2001",
+                    Address = "Diyarbakır/Yenişehir — Sentetik test adresi",
                     CurrentOrganizationUnitId = branch.Id,
                     IsActive = true
                 };
@@ -320,6 +419,14 @@ public static class DemoLoginAccounts
                 if (profile.CurrentOrganizationUnitId == Guid.Empty)
                     profile.CurrentOrganizationUnitId = branch.Id;
                 profile.IsActive = true;
+                profile.University = "Dicle Üniversitesi";
+                profile.SchoolDepartment = "Bilgisayar Mühendisliği";
+                profile.ClassLevel = "3";
+                profile.PhoneNumber = "0555 010 2001";
+                profile.Address = "Diyarbakır/Yenişehir — Sentetik test adresi";
+                if (string.IsNullOrWhiteSpace(profile.StudentNumber)
+                    || string.Equals(profile.StudentNumber, "DEMO-2001", StringComparison.OrdinalIgnoreCase))
+                    profile.StudentNumber = CanonicalInternStudentNumber;
             }
 
             var assignment = await db.InternUnitAssignments
